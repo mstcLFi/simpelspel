@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rekenoefening</title>
+<link rel="stylesheet" href="../template/template.css">
+<link rel="icon" href="../images/favicon.ico">
+<style>
+  html, body {height:100%; margin:0; padding:0;}
+  body {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    padding-top:2rem;
+    box-sizing:border-box;
+  }
+  #gameWrapper {display:flex; flex-direction:column; align-items:center; width:90%; max-width:400px; flex:1 0 auto;}
+  #gameContent {width:100%; display:flex; flex-direction:column; align-items:center; gap:1.2rem; flex:1 0 auto; justify-content:flex-start; margin-top:-1.5rem;}
+  #gameContent div {font-size:1.7rem; margin-bottom:0; text-align:center;}
+  #gameContent button {padding:0.5rem 1.3rem; border:1px solid #ccc; border-radius:12px; font-size:1.5rem; cursor:pointer; background-color:white; transition:background-color 0.2s ease; width:100%;}
+  #gameContent button:hover {background-color:lightblue;}
+  .correct {background-color:#4caf50 !important; color:white;}
+  .wrong {background-color:#f44336 !important; color:white;}
+  #feedback {font-size:1.2rem; font-weight:bold; min-height:1.5em; text-align:center; margin-bottom:1.25rem; color:red;}
+  #levelContainer {width:90%; max-width:400px; margin-top:1.2rem; display:flex; flex-direction:column; align-items:center;}
+  #levelDisplay {font-size:1.4rem; margin-bottom:0.4rem;}
+  #progressContainer {width:80%; max-width:320px; margin:0 auto; height:16px; border:1px solid #ccc; border-radius:8px; background-color:#eee;}
+  #progressBar {height:100%; width:0%; background-color:#68a749; border-radius:8px; transition:width 0.3s ease;}
+  #bgColorPicker {margin:0.5rem; width:90px; height:35px; border-radius:6px; border:1px solid #ccc;}
+</style>
+</head>
+<body>
+<div id="container">
+  <a id="backArrow" href="../index.html">↩︎</a>
+  <input type="color" id="bgColorPicker" value="#ffffff"/>
+  <h1 id="gameTitle">Rekenoefening</h1>
+  <div id="gameWrapper">
+      <div id="feedback"></div>
+      <div id="gameContent"></div>
+  </div>
+  <div id="levelContainer">
+    <div id="levelDisplay">Level 1</div>
+    <div id="progressContainer">
+      <div id="progressBar"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../template/template.js"></script>
+<script>
+const gameContent = document.getElementById("gameContent");
+const feedback = document.getElementById("feedback");
+const bgPicker = document.getElementById("bgColorPicker");
+bgPicker.addEventListener("input",(e)=>document.body.style.backgroundColor=e.target.value);
+
+// voxel brainrot images + sounds
+const successImages = [
+  'voxel brainrot/baleno aeronauto.jpg','voxel brainrot/bassolussino.jpg',
+  'voxel brainrot/bifolato carnebovino.jpg','voxel brainrot/buscorno gigantini.jpg',
+  'voxel brainrot/capricoptero.jpg','voxel brainrot/capronzo ferroviaia.jpg',
+  'voxel brainrot/cavaldo triciclino.jpg','voxel brainrot/coniglietto quattroruote.jpg',
+  'voxel brainrot/elefanto motoretto.jpg','voxel brainrot/felinella rotarino.jpg',
+  'voxel brainrot/flaminoggio rollarossa.jpg','voxel brainrot/girattino cursore.jpg',
+  'voxel brainrot/granaglia maiali.jpg','voxel brainrot/lumacardi rotellini.jpg',
+  'voxel brainrot/orsorulla.jpg','voxel brainrot/panda spingiterreni.jpg',
+  'voxel brainrot/pecuura croccante.jpg','voxel brainrot/pescarretto carbonello.jpg',
+  'voxel brainrot/pollastro navigatto.jpg','voxel brainrot/scorpione ghiacciatore.jpg',
+  'voxel brainrot/serpenza pedalaio.jpg','voxel brainrot/testuggino reclinetto.jpg',
+  'voxel brainrot/titlecard.jpg','voxel brainrot/uccello sommergino.jpg'
+];
+
+let overlay, overlayImg, overlayAudio;
+function createOverlay(){
+  overlay=document.createElement("div");
+  overlay.style.position="fixed"; overlay.style.top=0; overlay.style.left=0;
+  overlay.style.width="100%"; overlay.style.height="100%";
+  overlay.style.background="rgba(0,0,0,0.8)";
+  overlay.style.display="flex"; overlay.style.justifyContent="center"; overlay.style.alignItems="center";
+  overlay.style.zIndex=9999; overlay.style.cursor="pointer"; overlay.style.visibility="hidden";
+  overlayImg=document.createElement("img");
+  overlayImg.style.maxWidth="90%"; overlayImg.style.maxHeight="90%";
+  overlayImg.style.borderRadius="12px"; overlayImg.style.boxShadow="0 0 20px rgba(0,0,0,0.5)";
+  overlay.appendChild(overlayImg); document.body.appendChild(overlay);
+  overlay.addEventListener("click",()=>{
+    overlay.style.visibility="hidden";
+    if(overlayAudio){ overlayAudio.pause(); overlayAudio=null;}
+    progressCount=0; setProgress(0); showQuestion();
+  });
+}
+function showRandomSuccess(){
+  const randomFile = successImages[Math.floor(Math.random()*successImages.length)];
+  overlayImg.src=`../images/${randomFile}`;
+  overlay.style.visibility="visible";
+  const soundPath = `../sounds/${randomFile.replace('.jpg','.mp3')}`;
+  overlayAudio = new Audio(soundPath);
+  overlayAudio.play();
+}
+
+// game vars
+let currentLevel=1, currentQuestionIndex=0, questions=[], progressCount=0, questionFailed=false, lastQuestion=null;
+
+function playAdvance(){ if(typeof playAdvanceSound==='function') playAdvanceSound(); }
+function playWrong(){ if(typeof playIncorrectSound==='function') playIncorrectSound(); }
+function playDemote(){ if(typeof playDemoteSound==='function') playDemoteSound(); }
+
+function setLevel(lvl){ document.getElementById("levelDisplay").textContent=`Level ${lvl}`; }
+function setProgress(p){ document.getElementById("progressBar").style.width=p+"%"; }
+
+function generateQuestions(){
+  let qs=[]; const add=(a,b)=>({type:"add",a,b}); const sub=(a,b)=>({type:"sub",a,b});
+  const randomInt=(min,max)=>Math.floor(Math.random()*(max-min+1))+min;
+
+  function pushUnique(q){ // no consecutive repeats
+    if(lastQuestion && q.type===lastQuestion.type && q.a===lastQuestion.a && q.b===lastQuestion.b){
+      q.a+=1; if(q.type==="sub" && q.a<q.b) [q.a,q.b]=[q.b,q.a];
+    }
+    qs.push(q); lastQuestion=q;
+  }
+
+  if(currentLevel===1){ for(let i=0;i<10;i++){ pushUnique(add(randomInt(1,5),randomInt(1,5))); } }
+  else if(currentLevel===2){ for(let i=0;i<10;i++){ pushUnique(add(randomInt(5,10),randomInt(1,5))); } }
+  else if(currentLevel===3){ for(let i=0;i<10;i++){ pushUnique(sub(randomInt(5,10),randomInt(1,4))); } }
+  else if(currentLevel===4){
+    for(let i=0;i<5;i++){ pushUnique(add(randomInt(5,10),randomInt(1,5))); }
+    for(let i=0;i<5;i++){ pushUnique(sub(randomInt(5,10),randomInt(1,4))); }
+    qs.sort(()=>Math.random()-0.5);
+  }
+  else if(currentLevel===5){
+    for(let i=0;i<5;i++){ pushUnique(add(randomInt(1,10),randomInt(1,10))); }
+    for(let i=0;i<5;i++){ pushUnique(sub(randomInt(10,20),randomInt(1,10))); }
+    qs.sort(()=>Math.random()-0.5);
+  }
+  else if(currentLevel===6){
+    for(let i=0;i<5;i++){ pushUnique(add(randomInt(10,20),randomInt(1,10))); }
+    for(let i=0;i<5;i++){ pushUnique(sub(randomInt(15,20),randomInt(1,14))); }
+    qs.sort(()=>Math.random()-0.5);
+  }
+  else{ // level7+
+    for(let i=0;i<10;i++){
+      if(Math.random()<0.5){
+        let a=randomInt(1,100), b=randomInt(1,100); if(a+b>100)b=100-a;
+        pushUnique(add(a,b));
+      } else {
+        let a=randomInt(1,100), b=randomInt(0,a);
+        pushUnique(sub(a,b));
+      }
+    }
+  }
+  questions=qs;
+}
+
+function generateOptions(correct){
+  const opts=[correct];
+  while(opts.length<3){
+    let delta=Math.floor(Math.random()*5)+1;
+    let opt=Math.random()<0.5?correct+delta:correct-delta;
+    if(opt<0) opt=0;
+    if(!opts.includes(opt)) opts.push(opt);
+  }
+  return opts.sort(()=>Math.random()-0.5);
+}
+
+function showQuestion(){
+  gameContent.innerHTML="";
+  if(currentQuestionIndex>=questions.length){
+    currentLevel++; setLevel(currentLevel); generateQuestions(); currentQuestionIndex=0; progressCount=0; showRandomSuccess(); return;
+  }
+  const q=questions[currentQuestionIndex];
+  const correctAnswer=q.type==="add"?q.a+q.b:q.a-q.b;
+  questionFailed=false;
+
+  const qEl=document.createElement("div");
+  qEl.textContent=q.type==="add"?`Wat is ${q.a} + ${q.b} ?`:`Wat is ${q.a} - ${q.b} ?`;
+  gameContent.appendChild(qEl);
+
+  if(currentLevel>=8){
+    const input=document.createElement("input"); input.type="text";
+    input.style.fontSize="1.7rem"; input.style.textAlign="center"; input.style.width="80%";
+    input.style.padding="0.6rem"; input.style.borderRadius="12px"; input.style.border="1px solid #ccc";
+    gameContent.appendChild(input); input.focus();
+
+    input.addEventListener("keydown",(e)=>{
+      if(e.key==="Enter"){
+        const raw=input.value.trim(); if(raw==="") return;
+        const value=parseInt(raw); if(isNaN(value)) return;
+        if(value===correctAnswer){ playAdvance(); progressCount++; setProgress((progressCount/questions.length)*100); currentQuestionIndex++; input.value=""; showQuestion();}
+        else{
+          questionFailed=true; feedback.textContent=`Helaas! ${q.a} ${q.type==="add"?"+":"-"} ${q.b} = ${correctAnswer}`;
+          if(currentLevel>1){ currentLevel--; setLevel(currentLevel); generateQuestions(); currentQuestionIndex=0; progressCount=0; setProgress(0); playDemote(); setTimeout(showQuestion,800);}
+          else{ progressCount=0; currentQuestionIndex=0; setProgress(0); playWrong(); setTimeout(showQuestion,800);}
+        }
+      }
+    });
+  } else {
+    const opts=generateOptions(correctAnswer);
+    opts.forEach(opt=>{
+      const btn=document.createElement("button"); btn.textContent=opt;
+      btn.addEventListener("click",()=>{
+        if(opt===correctAnswer){ btn.classList.add("correct"); playAdvance(); progressCount++; setProgress((progressCount/questions.length)*100); setTimeout(()=>{currentQuestionIndex++; showQuestion();},500);}
+        else{ btn.classList.add("wrong"); questionFailed=true; feedback.textContent=`Helaas! ${q.a} ${q.type==="add"?"+":"-"} ${q.b} = ${correctAnswer}`; setTimeout(()=>{currentQuestionIndex++; showQuestion();},1000);}
+      });
+      gameContent.appendChild(btn);
+    });
+  }
+}
+
+createOverlay(); generateQuestions(); showQuestion();
+</script>
+</body>
+</html>
