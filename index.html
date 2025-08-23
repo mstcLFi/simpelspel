@@ -132,7 +132,7 @@ h1 { margin: 0; font-size: 1.5rem; }
   background-color: #00B140;
   color: white;
   text-align: center;
-  padding: 10rem 1rem; /* verhoogde padding voor meer zichtbaarheid */
+  padding: 10rem 1rem;
   font-size: 1rem;
   z-index: 2000;
   display: flex;
@@ -154,7 +154,7 @@ h1 { margin: 0; font-size: 1.5rem; }
 </style>
 
 <!-- Google AdSense -->
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXX" crossorigin="anonymous"></script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3156073245821665" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -173,10 +173,6 @@ h1 { margin: 0; font-size: 1.5rem; }
 <main>
 <div class="grid" id="card-grid">
   <!-- Gamekaartjes -->
-  <a href="games/gametitle.html" class="card">
-    <img src="images/voxel brainrot/titlecard.jpg" alt="Voorbeeld educatief spel">
-    <div class="card-title">Voorbeeld Game</div>
-  </a>
   <a href="games/multiplication.html" class="card">
     <img src="images/voxel brainrot/titlecard.jpg" alt="Tafels oefenen">
     <div class="card-title">Tafels oefenen</div>
@@ -222,16 +218,17 @@ h1 { margin: 0; font-size: 1.5rem; }
 
 <!-- Advertentie template -->
 <template id="ad-card">
-<div class="card">
-  <ins class="adsbygoogle"
-       style="display:block; height:200px;"
-       data-ad-client="ca-pub-XXXXXXXXXXXX"
-       data-ad-slot="1234567890"
-       data-ad-format="auto"
-       data-full-width-responsive="true"></ins>
-  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-  <div class="card-title">Advertentie</div>
-</div>
+  <div class="card" style="pointer-events: none; cursor: default;">
+    <div style="padding:10px; display:flex; justify-content:center; align-items:center; height:100%;">
+      <ins class="adsbygoogle"
+          style="display:block; width:100%; min-height:150px;"
+          data-ad-client="ca-pub-3156073245821665"
+          data-ad-slot="9771871555"
+          data-ad-format="auto"
+          data-full-width-responsive="true"></ins>
+    </div>
+    <div class="card-title">Advertentie</div>
+  </div>
 </template>
 
 <!-- Scroll-to-top button -->
@@ -262,7 +259,9 @@ document.addEventListener("DOMContentLoaded", () => {
     for (let i = 4; i < cards.length + inserted; i += 5) {
       const adClone = adTemplate.content.cloneNode(true);
       const insertIndex = Math.min(i + Math.floor(Math.random()*2), grid.children.length);
-      grid.insertBefore(adClone, grid.children[insertIndex]);
+      const insertedNode = grid.insertBefore(adClone, grid.children[insertIndex]);
+      // Initialize AdSense for the newly inserted ad
+      (adsbygoogle = window.adsbygoogle || []).push({});
       inserted++;
     }
   }
