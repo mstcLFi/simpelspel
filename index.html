@@ -255,16 +255,38 @@ document.addEventListener("DOMContentLoaded", () => {
   // Insert ads every 5th card
   function insertAds() {
     const cards = Array.from(grid.children);
-    let inserted = 0;
-    for (let i = 4; i < cards.length + inserted; i += 5) {
+    const numAds = Math.floor(cards.length / 5); // or any formula you like
+    let positions = [];
+
+    // Generate all allowed positions: skip index 0, skip last card
+    for (let i = 1; i < cards.length; i++) {
+      positions.push(i);
+    }
+
+    const usedPositions = [];
+
+    for (let i = 0; i < numAds; i++) {
+      // Filter positions to ensure at least 1 game between ads
+      const allowed = positions.filter(pos => 
+        !usedPositions.includes(pos - 1) &&
+        !usedPositions.includes(pos) &&
+        !usedPositions.includes(pos + 1)
+      );
+
+      if (allowed.length === 0) break; // no more valid spots
+
+      // Pick a random allowed position
+      const randomIndex = Math.floor(Math.random() * allowed.length);
+      const pos = allowed[randomIndex];
+
       const adClone = adTemplate.content.cloneNode(true);
-      const insertIndex = Math.min(i + Math.floor(Math.random()*2), grid.children.length);
-      const insertedNode = grid.insertBefore(adClone, grid.children[insertIndex]);
-      // Initialize AdSense for the newly inserted ad
+      const insertedNode = grid.insertBefore(adClone, grid.children[pos]);
       (adsbygoogle = window.adsbygoogle || []).push({});
-      inserted++;
+
+      usedPositions.push(pos);
     }
   }
+
   insertAds();
 
   // Scroll-to-top button visibility
