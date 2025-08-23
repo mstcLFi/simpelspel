@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tafels oefenen</title>
+
+<link rel="stylesheet" href="../template/template.css">
+
+<style>
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 2rem; /* ruimte voor URL-balk op mobiel */
+    box-sizing: border-box;
+  }
+
+  #gameWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 90%;
+    max-width: 400px;
+    flex: 1 0 auto;
+  }
+
+  #tableSelect {
+    margin: 0.5rem 0;
+    font-size: 1.6rem;  /* bigger */
+    padding: 0.6rem 1.2rem;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: white;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="gray" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1em;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  #tableSelect:hover {
+    border-color: #68a749;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+
+  #tableSelect:focus {
+    outline: none;
+    border-color: #68a749;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+
+  #gameContent {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem; /* space between question and answers */
+    flex: 1 0 auto;
+    justify-content: flex-start;   /* ✅ start just below feedback */
+    margin-top: -1.5rem;            /* ✅ adjust this for spacing */
+  }
+
+  #gameContent div {
+    font-size: 1.7rem; /* bigger question */
+    margin-bottom: 0.0rem;
+    text-align: center;
+  }
+
+  #gameContent button {
+    padding: 0.5rem 1.3rem;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    font-size: 1.5rem; /* bigger answers */
+    cursor: pointer;
+    background-color: white;
+    transition: background-color 0.2s ease;
+    width: 100%;
+  }
+
+  #gameContent button:hover {
+    background-color: lightblue;
+  }
+
+  .correct { background-color: #4caf50 !important; color: white; }
+  .wrong { background-color: #f44336 !important; color: white; }
+
+  #feedback {
+    font-size: 1.2rem;  /* bigger feedback */
+    font-weight: bold;
+    min-height: 1.5em;
+    text-align: center;
+    margin-bottom: 1.25rem; /* more breathing room */
+    color: red;
+  }
+
+  #levelContainer {
+    width: 90%;
+    max-width: 400px;
+    margin-top: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #levelDisplay {
+    font-size: 1.4rem; /* bigger level text */
+    margin-bottom: 0.4rem;
+  }
+
+  #progressContainer {
+    width: 80%;   /* instead of 100% */
+    max-width: 320px;
+    margin: 0 auto; /* ensures it is centered */
+    height: 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #eee;
+  }
+
+  #progressBar {
+    height: 100%;
+    width: 0%;
+    background-color: #68a749;
+    border-radius: 8px;
+    transition: width 0.3s ease;
+  }
+</style>
+</head>
+
+<body>
+<div id="container">
+  <a id="backArrow" href="../index.html">↩︎</a>
+  <input type="color" id="bgColorPicker" />
+  <h1 id="gameTitle">Tafeloefening</h1>
+
+  <div id="gameWrapper">
+      <select id="tableSelect">
+        <option value="" selected disabled>Kies een tafel</option>
+        <option value="1">Tafel van 1</option>
+        <option value="2">Tafel van 2</option>
+        <option value="3">Tafel van 3</option>
+        <option value="4">Tafel van 4</option>
+        <option value="5">Tafel van 5</option>
+        <option value="6">Tafel van 6</option>
+        <option value="7">Tafel van 7</option>
+        <option value="8">Tafel van 8</option>
+        <option value="9">Tafel van 9</option>
+        <option value="10">Tafel van 10</option>
+        <option value="11">Tafel van 11</option>
+        <option value="12">Tafel van 12</option>
+      </select>
+
+      <!-- Feedback net onder dropdown -->
+      <div id="feedback"></div>
+
+      <div id="gameContent"></div>
+  </div>
+
+  <div id="levelContainer">
+    <div id="levelDisplay">Level 1</div>
+    <div id="progressContainer">
+      <div id="progressBar"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../template/template.js"></script>
+
+<script>
+const tableSelect = document.getElementById("tableSelect");
+const gameContent = document.getElementById("gameContent");
+const feedback = document.getElementById("feedback");
+
+// --- voxel brainrot images + sounds ---
+const successImages = [
+  'voxel brainrot/baleno aeronauto.jpg',
+  'voxel brainrot/bassolussino.jpg',
+  'voxel brainrot/bifolato carnebovino.jpg',
+  'voxel brainrot/buscorno gigantini.jpg',
+  'voxel brainrot/capricoptero.jpg',
+  'voxel brainrot/capronzo ferroviaia.jpg',
+  'voxel brainrot/cavaldo triciclino.jpg',
+  'voxel brainrot/coniglietto quattroruote.jpg',
+  'voxel brainrot/elefanto motoretto.jpg',
+  'voxel brainrot/felinella rotarino.jpg',
+  'voxel brainrot/flaminoggio rollarossa.jpg',
+  'voxel brainrot/girattino cursore.jpg',
+  'voxel brainrot/granaglia maiali.jpg',
+  'voxel brainrot/lumacardi rotellini.jpg',
+  'voxel brainrot/orsorulla.jpg',
+  'voxel brainrot/panda spingiterreni.jpg',
+  'voxel brainrot/pecuura croccante.jpg',
+  'voxel brainrot/pescarretto carbonello.jpg',
+  'voxel brainrot/pollastro navigatto.jpg',
+  'voxel brainrot/scorpione ghiacciatore.jpg',
+  'voxel brainrot/serpenza pedalaio.jpg',
+  'voxel brainrot/testuggino reclinetto.jpg',
+  'voxel brainrot/titlecard.jpg',
+  'voxel brainrot/uccello sommergino.jpg',
+];
+
+// overlay element
+let overlay;
+let overlayImg;
+let overlayAudio;
+
+function createOverlay() {
+  overlay = document.createElement("div");
+  overlay.style.position = "fixed";
+  overlay.style.top = "0";
+  overlay.style.left = "0";
+  overlay.style.width = "100%";
+  overlay.style.height = "100%";
+  overlay.style.background = "rgba(0,0,0,0.8)";
+  overlay.style.display = "flex";
+  overlay.style.justifyContent = "center";
+  overlay.style.alignItems = "center";
+  overlay.style.zIndex = "9999";
+  overlay.style.cursor = "pointer";
+  overlay.style.visibility = "hidden";
+
+  overlayImg = document.createElement("img");
+  overlayImg.style.maxWidth = "90%";
+  overlayImg.style.maxHeight = "90%";
+  overlayImg.style.borderRadius = "12px";
+  overlayImg.style.boxShadow = "0 0 20px rgba(0,0,0,0.5)";
+
+  overlay.appendChild(overlayImg);
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener("click", () => {
+    overlay.style.visibility = "hidden";
+
+    if (overlayAudio) {
+      overlayAudio.pause();
+      overlayAudio = null;
+    }
+
+    // Reset progress bar when dismissing the overlay
+    progressCount = 0;
+    setProgress(0);
+    showQuestion();
+  });
+}
+
+function showRandomSuccess() {
+  const randomFile = successImages[Math.floor(Math.random() * successImages.length)];
+  overlayImg.src = `../images/${randomFile}`;
+  overlay.style.visibility = "visible";
+
+  // play matching sound
+  const soundPath = `../sounds/${randomFile.replace('.jpg','.mp3')}`;
+  overlayAudio = new Audio(soundPath);
+  overlayAudio.play();
+}
+
+// --- rest of game variables ---
+let currentLevel = 1;
+let currentQuestionIndex = 0;
+let selectedTable = null;
+let questions = [];
+let progressCount = 0; 
+let questionFailed = false;
+
+// LocalStorage keys
+function storageKey(table) {
+  return `tafels_progress_table_${table}`;
+}
+
+function saveProgress() {
+  if(selectedTable !== null){
+    const data = {
+      level: currentLevel,
+      progressCount: progressCount,
+      questionIndex: currentQuestionIndex
+    };
+    localStorage.setItem(storageKey(selectedTable), JSON.stringify(data));
+  }
+}
+
+// ✅ Updated loadProgress to sync questions and progress bar
+function loadProgress() {
+  if(selectedTable !== null){
+    const data = localStorage.getItem(storageKey(selectedTable));
+    if(data){
+      const obj = JSON.parse(data);
+      currentLevel = obj.level || 1;
+      currentQuestionIndex = obj.questionIndex || 0;
+      progressCount = obj.progressCount || 0;
+    } else {
+      currentLevel = 1;
+      currentQuestionIndex = 0;
+      progressCount = 0;
+    }
+    setLevel(currentLevel);
+    generateQuestions(); // must generate questions before setting progress
+    setProgress((progressCount / questions.length) * 100);
+  }
+}
+
+function playAdvance() { if(typeof playAdvanceSound === 'function') playAdvanceSound(); }
+function playWrong() { if(typeof playIncorrectSound === 'function') playIncorrectSound(); }
+function playDemote() { if(typeof playDemoteSound === 'function') playDemoteSound(); }
+
+function setLevel(level){ document.getElementById("levelDisplay").textContent = `Level ${level}`; }
+function setProgress(percent){ document.getElementById("progressBar").style.width = percent + "%"; }
+
+function generateQuestions() {
+  if(!selectedTable) return;
+
+  let qs = [];
+  const t = selectedTable;
+
+  if(currentLevel === 1){
+    for(let i=1;i<=10;i++) qs.push({factor:i, table:t});
+  } else if(currentLevel === 2){
+    const odd = [1,3,5,7,9].map(f=>({factor:f, table:t}));
+    const even = [2,4,6,8,10].map(f=>({factor:f, table:t}));
+    qs.push(...odd, ...even);
+  } else {
+    for(let i=1;i<=10;i++) qs.push({factor:i, table:t});
+    qs.sort(()=>Math.random()-0.5);
+  }
+
+  questions = qs.slice(0,10); 
+}
+
+function generateOptions(correct, level){
+  const options = [correct];
+  const count = level >= 6 ? 4 : 3;
+
+  while(options.length < count){
+    let opt;
+    if(level <= 3){
+      opt = Math.floor(Math.random()*12 + 1)*selectedTable;
+    } else if(level === 4){
+      opt = Math.floor(Math.random()*101);
+    } else {
+      opt = correct + Math.floor(Math.random()*11) - 5;
+      if(opt < 0) opt = 0;
+    }
+    if(!options.includes(opt)) options.push(opt);
+  }
+  return options.sort(()=>Math.random()-0.5);
+}
+
+function showQuestion(){
+  if(!selectedTable) return;
+
+  gameContent.innerHTML = "";
+  // ❌ don't clear feedback here so it persists
+
+  // End of level reached
+  if(currentQuestionIndex >= questions.length){
+    currentLevel++;
+    setLevel(currentLevel);
+    generateQuestions();
+    currentQuestionIndex = 0;
+    progressCount = 0;
+    saveProgress();
+
+    // 🎉 show random voxel brainrot image + sound
+    showRandomSuccess();
+
+    showQuestion();
+    return;
+  }
+
+  const q = questions[currentQuestionIndex];
+  const correctAnswer = q.factor * q.table;
+  questionFailed = false;
+
+  const qEl = document.createElement("div");
+  qEl.textContent = `Wat is ${q.factor} x ${q.table} ?`;
+  gameContent.appendChild(qEl);
+
+  // --- Level 6+ text input ---
+  if(currentLevel >= 6){
+    const input = document.createElement("input");
+    input.type = "text";
+    input.style.fontSize = "1.7rem";
+    input.style.textAlign = "center";
+    input.style.width = "80%";
+    input.style.padding = "0.6rem";
+    input.style.borderRadius = "12px";
+    input.style.border = "1px solid #ccc";
+    gameContent.appendChild(input);
+    input.focus();
+
+    input.addEventListener("keydown", (e) => {
+      if(e.key === "Enter"){
+        // Trim whitespace and check if the input is not empty
+        const rawValue = input.value.trim();
+        if(rawValue === "") return; // do nothing if empty
+
+        const value = parseInt(rawValue);
+        if(isNaN(value)) return; // do nothing if not a number
+
+        feedback.textContent = "";
+
+        if(value === correctAnswer){
+          playAdvance();
+          progressCount++;
+          setProgress((progressCount/questions.length)*100);
+          saveProgress();
+          currentQuestionIndex++;
+          input.value = "";
+          showQuestion(); // auto-focus next input
+        } else {
+          questionFailed = true;
+          feedback.textContent = `Helaas! ${q.factor} x ${q.table} = ${correctAnswer}`;
+
+          if(currentLevel > 1){
+            currentLevel--;
+            setLevel(currentLevel);
+            generateQuestions();
+            currentQuestionIndex = 0;
+            progressCount = 0;
+            setProgress(0);
+            playDemote();
+            saveProgress();
+            setTimeout(()=>{ showQuestion(); }, 800);
+          } else {
+            progressCount = 0;
+            currentQuestionIndex = 0;
+            setProgress(0);
+            playWrong();
+            saveProgress();
+            setTimeout(()=>{ showQuestion(); }, 800);
+          }
+        }
+      }
+    });
+  }
+  // --- Levels 1-5 multiple choice ---
+  else {
+    const opts = generateOptions(correctAnswer, currentLevel);
+    opts.forEach(opt=>{
+      const btn = document.createElement("button");
+      btn.textContent = opt;
+
+      btn.addEventListener("click", ()=>{
+        feedback.textContent = "";
+
+        if(opt === correctAnswer){
+          btn.classList.add("correct");
+          playAdvance();
+
+          if(!questionFailed){
+            progressCount++;
+            setProgress((progressCount/questions.length)*100);
+            saveProgress();
+          }
+          setTimeout(()=>{
+            currentQuestionIndex++;
+            saveProgress();
+            showQuestion();
+          },500);
+        } else {
+          questionFailed = true;
+          btn.classList.add("wrong");
+          feedback.textContent = `Helaas! ${q.factor} x ${q.table} = ${correctAnswer}`;
+
+          if(progressCount > 0){
+            progressCount = 0;
+            currentQuestionIndex = 0;
+            setProgress(0);
+            playWrong();
+            saveProgress();
+            setTimeout(()=>{ showQuestion(); }, 800);
+          } else if(currentLevel > 1){
+            currentLevel--;
+            setLevel(currentLevel);
+            generateQuestions();
+            currentQuestionIndex = 0;
+            progressCount = 0;
+            playDemote();
+            saveProgress();
+            setTimeout(()=>{ showQuestion(); }, 800);
+          } else {
+            playWrong();
+          }
+        }
+      });
+
+      gameContent.appendChild(btn);
+    });
+  }
+}
+
+tableSelect.addEventListener("change", ()=>{
+  selectedTable = parseInt(tableSelect.value);
+  loadProgress();  // loads level, questions, and correctly sets progress
+  showQuestion();
+});
+
+// create overlay on page load
+createOverlay();
+</script>
+</body>
+</html>

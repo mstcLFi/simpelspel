@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Leer snel op Simpelspel.nl!</title>
+
+<!-- SEO metatags -->
+<meta name="description" content="Speel leerzame spelletjes voor kinderen. Educatieve online games die taal, rekenen en logisch denken." />
+<meta name="keywords" content="spelletjes, leren, educatief, kinderen, rekenen, taal, logisch denken, online games, leerzame spelletjes" />
+<meta name="author" content="Lars Finnema" />
+
+<!-- Favicons -->
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png" />
+
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#68a749" />
+
+<style>
+* { box-sizing: border-box; }
+
+body, html {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f9fafb;
+  overflow-x: hidden;
+  min-height: 100%;
+}
+
+header {
+  text-align: center;
+  padding: 1rem;
+  background: #00B140;
+  color: white;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+main {
+  padding-top: 80px;
+}
+
+h1 { margin: 0; font-size: 1.5rem; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.card {
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  background: white;
+  transition: transform 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover { transform: translateY(-5px); }
+
+.card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  object-position: center;
+  filter: grayscale(100%);
+  transition: filter 0.3s ease;
+  display: block;
+  flex-shrink: 0;
+}
+
+.card:hover img { filter: grayscale(0%); }
+
+.card-title {
+  background: #f3f4f6;
+  text-align: center;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #111827;
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  header h1 { font-size: 1.2rem; }
+  .card img { height: 150px; }
+  .grid { gap: 1rem; padding: 0.5rem; }
+}
+
+/* Scroll-to-top button */
+#scroll-top {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  display: none;
+  background-color: #00B140;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 2rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transition: opacity 0.3s ease;
+  z-index: 1000;
+}
+
+#scroll-top:hover { background-color: #4f8a36; }
+
+/* Cookie banner */
+#cookie-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #00B140;
+  color: white;
+  text-align: center;
+  padding: 10rem 1rem; /* verhoogde padding voor meer zichtbaarheid */
+  font-size: 1rem;
+  z-index: 2000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+#cookie-banner button {
+  background: white;
+  color: #00B140;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  cursor: pointer;
+  font-weight: bold;
+  margin-left: 1rem;
+}
+</style>
+
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXX" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<header>
+  <h1>Leer snel op Simpelspel.nl!</h1>
+</header>
+
+<!-- Cookie banner -->
+<div id="cookie-banner">
+  <span>
+    Deze site gebruikt cookies voor gepersonaliseerde advertenties en om je voorkeuren op te slaan.
+  </span>
+  <button id="cookie-accept">Akkoord</button>
+</div>
+
+<main>
+<div class="grid" id="card-grid">
+  <!-- Gamekaartjes -->
+  <a href="games/gametitle.html" class="card">
+    <img src="images/voxel brainrot/titlecard.jpg" alt="Voorbeeld educatief spel">
+    <div class="card-title">Voorbeeld Game</div>
+  </a>
+  <a href="games/multiplication.html" class="card">
+    <img src="images/voxel brainrot/titlecard.jpg" alt="Tafels oefenen">
+    <div class="card-title">Tafels oefenen</div>
+  </a>
+  <a href="spel2.html" class="card">
+    <img src="images/spel2.jpg" alt="Taalspel voor kinderen">
+    <div class="card-title">Taalspel</div>
+  </a>
+  <a href="spel3.html" class="card">
+    <img src="images/spel3.jpg" alt="Logisch denkspel voor kinderen">
+    <div class="card-title">Logisch Denken</div>
+  </a>
+  <a href="spel4.html" class="card">
+    <img src="images/spel4.jpg" alt="Spel 4">
+    <div class="card-title">Spel 4</div>
+  </a>
+  <a href="spel5.html" class="card">
+    <img src="images/spel5.jpg" alt="Spel 5">
+    <div class="card-title">Spel 5</div>
+  </a>
+  <a href="spel6.html" class="card">
+    <img src="images/spel6.jpg" alt="Spel 6">
+    <div class="card-title">Spel 6</div>
+  </a>
+  <a href="spel7.html" class="card">
+    <img src="images/spel7.jpg" alt="Spel 7">
+    <div class="card-title">Spel 7</div>
+  </a>
+  <a href="spel8.html" class="card">
+    <img src="images/spel8.jpg" alt="Spel 8">
+    <div class="card-title">Spel 8</div>
+  </a>
+  <a href="spel9.html" class="card">
+    <img src="images/spel9.jpg" alt="Spel 9">
+    <div class="card-title">Spel 9</div>
+  </a>
+  <a href="spel10.html" class="card">
+    <img src="images/spel10.jpg" alt="Spel 10">
+    <div class="card-title">Spel 10</div>
+  </a>
+</div>
+</main>
+
+<!-- Advertentie template -->
+<template id="ad-card">
+<div class="card">
+  <ins class="adsbygoogle"
+       style="display:block; height:200px;"
+       data-ad-client="ca-pub-XXXXXXXXXXXX"
+       data-ad-slot="1234567890"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  <div class="card-title">Advertentie</div>
+</div>
+</template>
+
+<!-- Scroll-to-top button -->
+<button id="scroll-top" title="Scroll naar boven">↑</button>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const grid = document.getElementById("card-grid");
+  const adTemplate = document.getElementById("ad-card");
+  const scrollBtn = document.getElementById("scroll-top");
+  const buttonSound = new Audio('sounds/button.mp3');
+
+  // Cookie banner
+  const banner = document.getElementById("cookie-banner");
+  const acceptBtn = document.getElementById("cookie-accept");
+  if(localStorage.getItem("cookiesAccepted") === "true") {
+    banner.style.display = "none";
+  }
+  acceptBtn.addEventListener("click", () => {
+    localStorage.setItem("cookiesAccepted", "true");
+    banner.style.display = "none";
+  });
+
+  // Insert ads every 5th card
+  function insertAds() {
+    const cards = Array.from(grid.children);
+    let inserted = 0;
+    for (let i = 4; i < cards.length + inserted; i += 5) {
+      const adClone = adTemplate.content.cloneNode(true);
+      const insertIndex = Math.min(i + Math.floor(Math.random()*2), grid.children.length);
+      grid.insertBefore(adClone, grid.children[insertIndex]);
+      inserted++;
+    }
+  }
+  insertAds();
+
+  // Scroll-to-top button visibility
+  function checkScrollBtn() {
+    scrollBtn.style.display = (window.scrollY > 50) ? "block" : "none";
+  }
+  window.addEventListener("scroll", checkScrollBtn);
+  window.addEventListener("resize", checkScrollBtn);
+  checkScrollBtn();
+  scrollBtn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  // Game card lift effect & sound
+  const gameCards = document.querySelectorAll('#card-grid a.card');
+  gameCards.forEach(card => {
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
+      buttonSound.currentTime = 0;
+      buttonSound.play();
+      card.style.transform = 'translateY(-10px)';
+      card.style.transition = 'transform 0.3s ease';
+      const link = card.getAttribute('href');
+      setTimeout(() => { window.location.href = link; }, 500);
+    });
+  });
+});
+</script>
+
+</body>
+</html>
