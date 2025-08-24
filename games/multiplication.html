@@ -19,7 +19,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding-top: 2rem; /* ruimte voor URL-balk op mobiel */
+    padding-top: 2rem;
     box-sizing: border-box;
   }
 
@@ -34,13 +34,11 @@
 
   #tableSelect {
     margin: 0.5rem 0;
-    font-size: 1.6rem;  /* bigger */
+    font-size: 1.6rem;
     padding: 0.6rem 1.2rem;
     border-radius: 12px;
     border: 1px solid #ccc;
     appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
     background-color: white;
     background-image: url('data:image/svg+xml;utf8,<svg fill="gray" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
     background-repeat: no-repeat;
@@ -68,42 +66,54 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.2rem; /* space between question and answers */
+    gap: 1.2rem;
     flex: 1 0 auto;
-    justify-content: flex-start;   /* ✅ start just below feedback */
-    margin-top: -1.5rem;            /* ✅ adjust this for spacing */
+    justify-content: flex-start;
+    margin-top: -1.5rem;
   }
 
   #gameContent div {
-    font-size: 1.7rem; /* bigger question */
+    font-size: 1.4rem;
     margin-bottom: 0.0rem;
     text-align: center;
   }
 
+  #gameContent input[type="text"] {
+    font-size: 1.7rem;
+    padding: 0.0rem 0.0rem;
+    max-width: 240px;
+    text-align: center;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+  }
+
   #gameContent button {
-    padding: 0.5rem 1.3rem;
+    padding: 0.4rem 0.8rem;
     border: 1px solid #ccc;
     border-radius: 12px;
-    font-size: 1.5rem; /* bigger answers */
+    font-size: 1.3rem;
     cursor: pointer;
     background-color: white;
     transition: background-color 0.2s ease;
     width: 100%;
   }
 
-  #gameContent button:hover {
-    background-color: lightblue;
+  /* Level 6+ keypad buttons - PC default */
+  #gameContent > div:nth-child(2) button {
+    font-size: 1.0rem;
+    padding: 0.0rem 0.0rem;
+    border-radius: 10px;
   }
 
   .correct { background-color: #4caf50 !important; color: white; }
   .wrong { background-color: #f44336 !important; color: white; }
 
   #feedback {
-    font-size: 1.2rem;  /* bigger feedback */
+    font-size: 1.2rem;
     font-weight: bold;
     min-height: 1.5em;
     text-align: center;
-    margin-bottom: 1.25rem; /* more breathing room */
+    margin-bottom: 1.25rem;
     color: red;
   }
 
@@ -117,14 +127,14 @@
   }
 
   #levelDisplay {
-    font-size: 1.4rem; /* bigger level text */
+    font-size: 1.4rem;
     margin-bottom: 0.4rem;
   }
 
   #progressContainer {
-    width: 80%;   /* instead of 100% */
+    width: 80%;
     max-width: 320px;
-    margin: 0 auto; /* ensures it is centered */
+    margin: 0 auto;
     height: 16px;
     border: 1px solid #ccc;
     border-radius: 8px;
@@ -137,6 +147,27 @@
     background-color: #68a749;
     border-radius: 8px;
     transition: width 0.3s ease;
+  }
+
+  /* Mobile scaling */
+  @media (max-width: 768px) {
+    #gameContent div {
+      font-size: 1.7rem;
+    }
+    #gameContent input[type="text"] {
+      font-size: 1.7rem;
+      padding: 0.6rem;
+      max-width: 80%;
+    }
+    #gameContent button {
+      font-size: 1.5rem;
+      padding: 0.6rem 1rem;
+    }
+    #gameContent > div:nth-child(2) button {
+      font-size: 1.7rem;
+      padding: 1rem;
+      border-radius: 12px;
+    }
   }
 </style>
 </head>
@@ -164,9 +195,7 @@
         <option value="12">Tafel van 12</option>
       </select>
 
-      <!-- Feedback net onder dropdown -->
       <div id="feedback"></div>
-
       <div id="gameContent"></div>
   </div>
 
@@ -185,7 +214,6 @@ const tableSelect = document.getElementById("tableSelect");
 const gameContent = document.getElementById("gameContent");
 const feedback = document.getElementById("feedback");
 
-// --- voxel brainrot images + sounds ---
 const successImages = [
   'voxel brainrot/baleno aeronauto.jpg',
   'voxel brainrot/bassolussino.jpg',
@@ -213,10 +241,12 @@ const successImages = [
   'voxel brainrot/uccello sommergino.jpg',
 ];
 
-// overlay element
-let overlay;
-let overlayImg;
-let overlayAudio;
+let overlay, overlayImg, overlayAudio;
+
+// --- Mobile detection ---
+function isMobile() {
+  return window.innerWidth <= 1024;
+}
 
 function createOverlay() {
   overlay = document.createElement("div");
@@ -244,13 +274,7 @@ function createOverlay() {
 
   overlay.addEventListener("click", () => {
     overlay.style.visibility = "hidden";
-
-    if (overlayAudio) {
-      overlayAudio.pause();
-      overlayAudio = null;
-    }
-
-    // Reset progress bar when dismissing the overlay
+    if (overlayAudio) { overlayAudio.pause(); overlayAudio = null; }
     progressCount = 0;
     setProgress(0);
     showQuestion();
@@ -261,38 +285,28 @@ function showRandomSuccess() {
   const randomFile = successImages[Math.floor(Math.random() * successImages.length)];
   overlayImg.src = `../images/${randomFile}`;
   overlay.style.visibility = "visible";
-
-  // play matching sound
   const soundPath = `../sounds/${randomFile.replace('.jpg','.mp3')}`;
   overlayAudio = new Audio(soundPath);
   overlayAudio.play();
 }
 
-// --- rest of game variables ---
+// --- game variables ---
 let currentLevel = 1;
 let currentQuestionIndex = 0;
 let selectedTable = null;
 let questions = [];
-let progressCount = 0; 
+let progressCount = 0;
 let questionFailed = false;
 
-// LocalStorage keys
-function storageKey(table) {
-  return `tafels_progress_table_${table}`;
-}
+function storageKey(table) { return `tafels_progress_table_${table}`; }
 
 function saveProgress() {
   if(selectedTable !== null){
-    const data = {
-      level: currentLevel,
-      progressCount: progressCount,
-      questionIndex: currentQuestionIndex
-    };
+    const data = { level: currentLevel, progressCount: progressCount, questionIndex: currentQuestionIndex };
     localStorage.setItem(storageKey(selectedTable), JSON.stringify(data));
   }
 }
 
-// ✅ Updated loadProgress to sync questions and progress bar
 function loadProgress() {
   if(selectedTable !== null){
     const data = localStorage.getItem(storageKey(selectedTable));
@@ -307,7 +321,7 @@ function loadProgress() {
       progressCount = 0;
     }
     setLevel(currentLevel);
-    generateQuestions(); // must generate questions before setting progress
+    generateQuestions();
     setProgress((progressCount / questions.length) * 100);
   }
 }
@@ -321,7 +335,6 @@ function setProgress(percent){ document.getElementById("progressBar").style.widt
 
 function generateQuestions() {
   if(!selectedTable) return;
-
   let qs = [];
   const t = selectedTable;
 
@@ -335,36 +348,27 @@ function generateQuestions() {
     for(let i=1;i<=10;i++) qs.push({factor:i, table:t});
     qs.sort(()=>Math.random()-0.5);
   }
-
   questions = qs.slice(0,10); 
 }
 
 function generateOptions(correct, level){
   const options = [correct];
   const count = level >= 6 ? 4 : 3;
-
   while(options.length < count){
     let opt;
-    if(level <= 3){
-      opt = Math.floor(Math.random()*12 + 1)*selectedTable;
-    } else if(level === 4){
-      opt = Math.floor(Math.random()*101);
-    } else {
-      opt = correct + Math.floor(Math.random()*11) - 5;
-      if(opt < 0) opt = 0;
-    }
+    if(level <= 3){ opt = Math.floor(Math.random()*12 + 1)*selectedTable; }
+    else if(level === 4){ opt = Math.floor(Math.random()*101); }
+    else { opt = correct + Math.floor(Math.random()*11) - 5; if(opt<0) opt=0; }
     if(!options.includes(opt)) options.push(opt);
   }
   return options.sort(()=>Math.random()-0.5);
 }
 
+// --- showQuestion function ---
 function showQuestion(){
   if(!selectedTable) return;
-
   gameContent.innerHTML = "";
-  // ❌ don't clear feedback here so it persists
 
-  // End of level reached
   if(currentQuestionIndex >= questions.length){
     currentLevel++;
     setLevel(currentLevel);
@@ -372,10 +376,7 @@ function showQuestion(){
     currentQuestionIndex = 0;
     progressCount = 0;
     saveProgress();
-
-    // 🎉 show random voxel brainrot image + sound
     showRandomSuccess();
-
     showQuestion();
     return;
   }
@@ -388,127 +389,176 @@ function showQuestion(){
   qEl.textContent = `Wat is ${q.factor} x ${q.table} ?`;
   gameContent.appendChild(qEl);
 
-  // --- Level 6+ text input ---
-  if(currentLevel >= 6){
-    const input = document.createElement("input");
-    input.type = "text";
-    input.style.fontSize = "1.7rem";
-    input.style.textAlign = "center";
-    input.style.width = "80%";
-    input.style.padding = "0.6rem";
-    input.style.borderRadius = "12px";
-    input.style.border = "1px solid #ccc";
-    gameContent.appendChild(input);
-    input.focus();
+  const display = document.createElement("input");
+  display.type = "text";
+  display.readOnly = currentLevel >= 6 && isMobile(); // only read-only for mobile keypad
+  gameContent.appendChild(display);
 
-    input.addEventListener("keydown", (e) => {
-      if(e.key === "Enter"){
-        // Trim whitespace and check if the input is not empty
-        const rawValue = input.value.trim();
-        if(rawValue === "") return; // do nothing if empty
+  // --- Auto-focus for PC on level 6+ ---
+  if(currentLevel >= 6 && !isMobile()){
+    setTimeout(() => {
+      display.focus();
+    }, 0);
+  }
 
-        const value = parseInt(rawValue);
-        if(isNaN(value)) return; // do nothing if not a number
+  if(currentLevel >= 6 && isMobile()){
+    const keypad = document.createElement("div");
+    keypad.style.display = "grid";
+    keypad.style.gridTemplateColumns = "repeat(3, 1fr)";
+    keypad.style.gap = "0.5rem";
+    keypad.style.marginTop = "1rem";
+    gameContent.appendChild(keypad);
 
+    const buttons = ["1","2","3","4","5","6","7","8","9","←","0","✓"];
+    buttons.forEach(b=>{
+      const btn = document.createElement("button");
+      btn.textContent = b;
+      keypad.appendChild(btn);
+
+      btn.addEventListener("click", ()=>{
+        if(b==="←"){ display.value = display.value.slice(0,-1); }
+        else if(b==="✓"){
+          const rawValue = display.value.trim();
+          if(rawValue==="") return;
+          const value = parseInt(rawValue);
+          if(isNaN(value)) return;
+          feedback.textContent = "";
+          if(value===correctAnswer){
+            playAdvance();
+            progressCount++;
+            setProgress((progressCount/questions.length)*100);
+            saveProgress();
+            currentQuestionIndex++;
+            showQuestion();
+          } else {
+            questionFailed = true;
+            feedback.textContent = `Helaas! ${q.factor} x ${q.table} = ${correctAnswer}`;
+            if(progressCount>0){
+              progressCount=0;
+              currentQuestionIndex=0;
+              setProgress(0);
+              playWrong();
+              saveProgress();
+              setTimeout(()=>{ showQuestion(); },800);
+            } else if(currentLevel>1){
+              currentLevel--;
+              setLevel(currentLevel);
+              generateQuestions();
+              currentQuestionIndex=0;
+              progressCount=0;
+              setProgress(0);
+              playDemote();
+              saveProgress();
+              setTimeout(()=>{ showQuestion(); },800);
+            } else {
+              progressCount=0;
+              currentQuestionIndex=0;
+              setProgress(0);
+              playWrong();
+              saveProgress();
+              setTimeout(()=>{ showQuestion(); },800);
+            }
+          }
+        } else { display.value += b; }
+      });
+    });
+  } else if(currentLevel >= 6){
+    // PC input, allow typing and Enter key
+    display.readOnly = false;
+    display.addEventListener("keyup", e=>{
+      if(e.key==="Enter"){
+        const value = parseInt(display.value.trim());
+        if(isNaN(value)) return;
         feedback.textContent = "";
-
-        if(value === correctAnswer){
+        if(value===correctAnswer){
           playAdvance();
           progressCount++;
           setProgress((progressCount/questions.length)*100);
           saveProgress();
           currentQuestionIndex++;
-          input.value = "";
-          showQuestion(); // auto-focus next input
+          showQuestion();
         } else {
           questionFailed = true;
           feedback.textContent = `Helaas! ${q.factor} x ${q.table} = ${correctAnswer}`;
-
-          if(currentLevel > 1){
-            currentLevel--;
-            setLevel(currentLevel);
-            generateQuestions();
-            currentQuestionIndex = 0;
-            progressCount = 0;
-            setProgress(0);
-            playDemote();
-            saveProgress();
-            setTimeout(()=>{ showQuestion(); }, 800);
-          } else {
-            progressCount = 0;
-            currentQuestionIndex = 0;
+          if(progressCount>0){
+            progressCount=0;
+            currentQuestionIndex=0;
             setProgress(0);
             playWrong();
             saveProgress();
-            setTimeout(()=>{ showQuestion(); }, 800);
+            setTimeout(()=>{ showQuestion(); },800);
+          } else if(currentLevel>1){
+            currentLevel--;
+            setLevel(currentLevel);
+            generateQuestions();
+            currentQuestionIndex=0;
+            progressCount=0;
+            setProgress(0);
+            playDemote();
+            saveProgress();
+            setTimeout(()=>{ showQuestion(); },800);
+          } else {
+            progressCount=0;
+            currentQuestionIndex=0;
+            setProgress(0);
+            playWrong();
+            saveProgress();
+            setTimeout(()=>{ showQuestion(); },800);
           }
         }
       }
     });
-  }
-  // --- Levels 1-5 multiple choice ---
-  else {
+  } else {
     const opts = generateOptions(correctAnswer, currentLevel);
     opts.forEach(opt=>{
       const btn = document.createElement("button");
       btn.textContent = opt;
-
       btn.addEventListener("click", ()=>{
         feedback.textContent = "";
-
-        if(opt === correctAnswer){
+        if(opt===correctAnswer){
           btn.classList.add("correct");
           playAdvance();
-
           if(!questionFailed){
             progressCount++;
             setProgress((progressCount/questions.length)*100);
             saveProgress();
           }
-          setTimeout(()=>{
-            currentQuestionIndex++;
-            saveProgress();
-            showQuestion();
-          },500);
+          setTimeout(()=>{ currentQuestionIndex++; saveProgress(); showQuestion(); },500);
         } else {
           questionFailed = true;
           btn.classList.add("wrong");
           feedback.textContent = `Helaas! ${q.factor} x ${q.table} = ${correctAnswer}`;
-
-          if(progressCount > 0){
-            progressCount = 0;
-            currentQuestionIndex = 0;
+          if(progressCount>0){
+            progressCount=0;
+            currentQuestionIndex=0;
             setProgress(0);
             playWrong();
             saveProgress();
-            setTimeout(()=>{ showQuestion(); }, 800);
-          } else if(currentLevel > 1){
+            setTimeout(()=>{ showQuestion(); },800);
+          } else if(currentLevel>1){
             currentLevel--;
             setLevel(currentLevel);
             generateQuestions();
-            currentQuestionIndex = 0;
-            progressCount = 0;
+            currentQuestionIndex=0;
+            progressCount=0;
             playDemote();
             saveProgress();
-            setTimeout(()=>{ showQuestion(); }, 800);
-          } else {
-            playWrong();
-          }
+            setTimeout(()=>{ showQuestion(); },800);
+          } else { playWrong(); }
         }
       });
-
       gameContent.appendChild(btn);
     });
   }
 }
 
+
 tableSelect.addEventListener("change", ()=>{
   selectedTable = parseInt(tableSelect.value);
-  loadProgress();  // loads level, questions, and correctly sets progress
+  loadProgress();
   showQuestion();
 });
 
-// create overlay on page load
 createOverlay();
 </script>
 </body>
