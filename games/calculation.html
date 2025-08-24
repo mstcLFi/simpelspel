@@ -3,43 +3,173 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Rekenoefening</title>
+<title>Optellen & aftrekken</title>
+
+<!-- Favicons (same as index.html) -->
+<link rel="apple-touch-icon" sizes="180x180" href="../icons/apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="../icons/icon-32.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png" />
+<link rel="icon" type="image/png" sizes="512x512" href="../icons/icon-512.png" />
+
 <link rel="stylesheet" href="../template/template.css">
-<link rel="icon" href="../images/favicon.ico">
+
 <style>
-  html, body {height:100%; margin:0; padding:0;}
+  html, body { height: 100%; margin: 0; padding: 0; }
+
   body {
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:flex-start;
-    padding-top:2rem;
-    box-sizing:border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 2rem;
+    box-sizing: border-box;
   }
-  #gameWrapper {display:flex; flex-direction:column; align-items:center; width:90%; max-width:400px; flex:1 0 auto;}
-  #gameContent {width:100%; display:flex; flex-direction:column; align-items:center; gap:1.2rem; flex:1 0 auto; justify-content:flex-start; margin-top:-1.5rem;}
-  #gameContent div {font-size:1.7rem; margin-bottom:0; text-align:center;}
-  #gameContent button {padding:0.5rem 1.3rem; border:1px solid #ccc; border-radius:12px; font-size:1.5rem; cursor:pointer; background-color:white; transition:background-color 0.2s ease; width:100%;}
-  #gameContent button:hover {background-color:lightblue;}
-  .correct {background-color:#4caf50 !important; color:white;}
-  .wrong {background-color:#f44336 !important; color:white;}
-  #feedback {font-size:1.2rem; font-weight:bold; min-height:1.5em; text-align:center; margin-bottom:1.25rem; color:red;}
-  #levelContainer {width:90%; max-width:400px; margin-top:1.2rem; display:flex; flex-direction:column; align-items:center;}
-  #levelDisplay {font-size:1.4rem; margin-bottom:0.4rem;}
-  #progressContainer {width:80%; max-width:320px; margin:0 auto; height:16px; border:1px solid #ccc; border-radius:8px; background-color:#eee;}
-  #progressBar {height:100%; width:0%; background-color:#68a749; border-radius:8px; transition:width 0.3s ease;}
-  #bgColorPicker {margin:0.5rem; width:90px; height:35px; border-radius:6px; border:1px solid #ccc;}
+
+  #gameWrapper, #levelContainer { display: none; }
+
+  #gameWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 90%;
+    max-width: 400px;
+    flex: 1 0 auto;
+  }
+
+  #gameContent {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+    flex: 1 0 auto;
+    justify-content: flex-start;
+    margin-top: -1.5rem;
+  }
+
+  #gameContent div { font-size: 1.4rem; margin-bottom: 0; text-align: center; }
+
+  #gameContent input[type="text"] {
+    font-size: 1.7rem;
+    padding: 0;
+    max-width: 240px;
+    text-align: center;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+  }
+
+  #gameContent button {
+    padding: 0.4rem 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    font-size: 1.3rem;
+    cursor: pointer;
+    background-color: white;
+    transition: background-color 0.2s ease;
+    width: 100%;
+  }
+
+  #gameContent > div:nth-child(2) button {
+    font-size: 1.0rem;
+    padding: 0;
+    border-radius: 10px;
+  }
+
+  .correct { background-color: #4caf50 !important; color: white; }
+  .wrong { background-color: #f44336 !important; color: white; }
+
+  #feedback {
+    font-size: 1.2rem;
+    font-weight: bold;
+    min-height: 1.5em;
+    text-align: center;
+    margin-bottom: 1.25rem;
+    color: red;
+  }
+
+  #levelContainer {
+    width: 90%;
+    max-width: 400px;
+    margin-top: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #levelDisplay { font-size: 1.4rem; margin-bottom: 0.4rem; }
+
+  #progressContainer {
+    width: 80%;
+    max-width: 320px;
+    margin: 0 auto;
+    height: 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #eee;
+  }
+
+  #progressBar {
+    height: 100%;
+    width: 0%;
+    background-color: #68a749;
+    border-radius: 8px;
+    transition: width 0.3s ease;
+  }
+
+  #startScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  #startScreen button {
+    padding: 1rem 2rem;
+    font-size: 1.5rem;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+
+  .startButton {
+    width: 180px;       /* same fixed width */
+    padding: 0.8rem 0;  /* same padding */
+    font-size: 1.5rem;  /* same font size */
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    background-color: white;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .startButton:hover {
+    background-color: #e0f0d9;
+  }
+
+  @media (max-width: 768px) {
+    #gameContent div { font-size: 1.7rem; }
+    #gameContent input[type="text"] { font-size: 1.7rem; padding: 0.6rem; max-width: 80%; }
+    #gameContent button { font-size: 1.5rem; padding: 0.6rem 1rem; }
+    #gameContent > div:nth-child(2) button { font-size: 1.7rem; padding: 1rem; border-radius: 12px; }
+  }
 </style>
 </head>
+
 <body>
 <div id="container">
   <a id="backArrow" href="../index.html">↩︎</a>
-  <input type="color" id="bgColorPicker" value="#ffffff"/>
-  <h1 id="gameTitle">Rekenoefening</h1>
+  <input type="color" id="bgColorPicker" />
+  <h1 id="gameTitle">Optellen & aftrekken</h1>
+
+  <!-- Start screen -->
+  <div id="startScreen" style="display:flex; flex-direction:column; align-items:center; gap:1rem; margin-top:3rem;">
+    <button id="startNew" class="startButton">Start</button>
+    <button id="continue" class="startButton">Doorgaan</button>
+  </div>
+
   <div id="gameWrapper">
       <div id="feedback"></div>
       <div id="gameContent"></div>
   </div>
+
   <div id="levelContainer">
     <div id="levelDisplay">Level 1</div>
     <div id="progressContainer">
@@ -49,164 +179,284 @@
 </div>
 
 <script src="../template/template.js"></script>
+
 <script>
 const gameContent = document.getElementById("gameContent");
 const feedback = document.getElementById("feedback");
-const bgPicker = document.getElementById("bgColorPicker");
-bgPicker.addEventListener("input",(e)=>document.body.style.backgroundColor=e.target.value);
 
-// voxel brainrot images + sounds
 const successImages = [
-  'voxel brainrot/baleno aeronauto.jpg','voxel brainrot/bassolussino.jpg',
-  'voxel brainrot/bifolato carnebovino.jpg','voxel brainrot/buscorno gigantini.jpg',
-  'voxel brainrot/capricoptero.jpg','voxel brainrot/capronzo ferroviaia.jpg',
-  'voxel brainrot/cavaldo triciclino.jpg','voxel brainrot/coniglietto quattroruote.jpg',
-  'voxel brainrot/elefanto motoretto.jpg','voxel brainrot/felinella rotarino.jpg',
-  'voxel brainrot/flaminoggio rollarossa.jpg','voxel brainrot/girattino cursore.jpg',
-  'voxel brainrot/granaglia maiali.jpg','voxel brainrot/lumacardi rotellini.jpg',
-  'voxel brainrot/orsorulla.jpg','voxel brainrot/panda spingiterreni.jpg',
-  'voxel brainrot/pecuura croccante.jpg','voxel brainrot/pescarretto carbonello.jpg',
-  'voxel brainrot/pollastro navigatto.jpg','voxel brainrot/scorpione ghiacciatore.jpg',
-  'voxel brainrot/serpenza pedalaio.jpg','voxel brainrot/testuggino reclinetto.jpg',
-  'voxel brainrot/titlecard.jpg','voxel brainrot/uccello sommergino.jpg'
+  'voxel brainrot/baleno aeronauto.jpg',
+  'voxel brainrot/bassolussino.jpg',
+  'voxel brainrot/bifolato carnebovino.jpg',
+  'voxel brainrot/buscorno gigantini.jpg',
+  'voxel brainrot/capricoptero.jpg',
+  'voxel brainrot/capronzo ferroviaia.jpg',
+  'voxel brainrot/cavaldo triciclino.jpg',
+  'voxel brainrot/coniglietto quattroruote.jpg',
+  'voxel brainrot/elefanto motoretto.jpg',
+  'voxel brainrot/felinella rotarino.jpg',
+  'voxel brainrot/flaminoggio rollarossa.jpg',
+  'voxel brainrot/girattino cursore.jpg',
+  'voxel brainrot/granaglia maiali.jpg',
+  'voxel brainrot/lumacardi rotellini.jpg',
+  'voxel brainrot/orsorulla.jpg',
+  'voxel brainrot/panda spingiterreni.jpg',
+  'voxel brainrot/pecuura croccante.jpg',
+  'voxel brainrot/pescarretto carbonello.jpg',
+  'voxel brainrot/pollastro navigatto.jpg',
+  'voxel brainrot/scorpione ghiacciatore.jpg',
+  'voxel brainrot/serpenza pedalaio.jpg',
+  'voxel brainrot/testuggino reclinetto.jpg',
+  'voxel brainrot/titlecard.jpg',
+  'voxel brainrot/uccello sommergino.jpg',
 ];
 
 let overlay, overlayImg, overlayAudio;
-function createOverlay(){
-  overlay=document.createElement("div");
-  overlay.style.position="fixed"; overlay.style.top=0; overlay.style.left=0;
-  overlay.style.width="100%"; overlay.style.height="100%";
-  overlay.style.background="rgba(0,0,0,0.8)";
-  overlay.style.display="flex"; overlay.style.justifyContent="center"; overlay.style.alignItems="center";
-  overlay.style.zIndex=9999; overlay.style.cursor="pointer"; overlay.style.visibility="hidden";
-  overlayImg=document.createElement("img");
-  overlayImg.style.maxWidth="90%"; overlayImg.style.maxHeight="90%";
-  overlayImg.style.borderRadius="12px"; overlayImg.style.boxShadow="0 0 20px rgba(0,0,0,0.5)";
-  overlay.appendChild(overlayImg); document.body.appendChild(overlay);
-  overlay.addEventListener("click",()=>{
-    overlay.style.visibility="hidden";
-    if(overlayAudio){ overlayAudio.pause(); overlayAudio=null;}
-    progressCount=0; setProgress(0); showQuestion();
+
+// --- Mobile detection ---
+function isMobile() { return window.innerWidth <= 1024; }
+
+function createOverlay() {
+  overlay = document.createElement("div");
+  overlay.style.position = "fixed";
+  overlay.style.top = "0";
+  overlay.style.left = "0";
+  overlay.style.width = "100%";
+  overlay.style.height = "100%";
+  overlay.style.background = "rgba(0,0,0,0.8)";
+  overlay.style.display = "flex";
+  overlay.style.justifyContent = "center";
+  overlay.style.alignItems = "center";
+  overlay.style.zIndex = "9999";
+  overlay.style.cursor = "pointer";
+  overlay.style.visibility = "hidden";
+
+  overlayImg = document.createElement("img");
+  overlayImg.style.maxWidth = "90%";
+  overlayImg.style.maxHeight = "90%";
+  overlayImg.style.borderRadius = "12px";
+  overlayImg.style.boxShadow = "0 0 20px rgba(0,0,0,0.5)";
+
+  overlay.appendChild(overlayImg);
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener("click", () => {
+    overlay.style.visibility = "hidden";
+    if (overlayAudio) { overlayAudio.pause(); overlayAudio = null; }
+    progressCount = 0;
+    setProgress(0);
+    showQuestion();
   });
 }
-function showRandomSuccess(){
-  const randomFile = successImages[Math.floor(Math.random()*successImages.length)];
-  overlayImg.src=`../images/${randomFile}`;
-  overlay.style.visibility="visible";
+
+function showRandomSuccess() {
+  const randomFile = successImages[Math.floor(Math.random() * successImages.length)];
+  overlayImg.src = `../images/${randomFile}`;
+  overlay.style.visibility = "visible";
   const soundPath = `../sounds/${randomFile.replace('.jpg','.mp3')}`;
   overlayAudio = new Audio(soundPath);
   overlayAudio.play();
 }
 
-// game vars
-let currentLevel=1, currentQuestionIndex=0, questions=[], progressCount=0, questionFailed=false, lastQuestion=null;
+// --- game variables ---
+let currentLevel = 1;
+let displayLevel = 1;
+let currentQuestionIndex = 0;
+let selectedTable = Math.floor(Math.random() * 12) + 1;
+let questions = [];
+let progressCount = 0;
+let questionFailed = false;
 
-function playAdvance(){ if(typeof playAdvanceSound==='function') playAdvanceSound(); }
-function playWrong(){ if(typeof playIncorrectSound==='function') playIncorrectSound(); }
-function playDemote(){ if(typeof playDemoteSound==='function') playDemoteSound(); }
+// --- localStorage ---
+function storageKey() { return `addition_progress_table`; }
 
-function setLevel(lvl){ document.getElementById("levelDisplay").textContent=`Level ${lvl}`; }
-function setProgress(p){ document.getElementById("progressBar").style.width=p+"%"; }
-
-function generateQuestions(){
-  let qs=[]; const add=(a,b)=>({type:"add",a,b}); const sub=(a,b)=>({type:"sub",a,b});
-  const randomInt=(min,max)=>Math.floor(Math.random()*(max-min+1))+min;
-
-  function pushUnique(q){ // no consecutive repeats
-    if(lastQuestion && q.type===lastQuestion.type && q.a===lastQuestion.a && q.b===lastQuestion.b){
-      q.a+=1; if(q.type==="sub" && q.a<q.b) [q.a,q.b]=[q.b,q.a];
-    }
-    qs.push(q); lastQuestion=q;
-  }
-
-  if(currentLevel===1){ for(let i=0;i<10;i++){ pushUnique(add(randomInt(1,5),randomInt(1,5))); } }
-  else if(currentLevel===2){ for(let i=0;i<10;i++){ pushUnique(add(randomInt(5,10),randomInt(1,5))); } }
-  else if(currentLevel===3){ for(let i=0;i<10;i++){ pushUnique(sub(randomInt(5,10),randomInt(1,4))); } }
-  else if(currentLevel===4){
-    for(let i=0;i<5;i++){ pushUnique(add(randomInt(5,10),randomInt(1,5))); }
-    for(let i=0;i<5;i++){ pushUnique(sub(randomInt(5,10),randomInt(1,4))); }
-    qs.sort(()=>Math.random()-0.5);
-  }
-  else if(currentLevel===5){
-    for(let i=0;i<5;i++){ pushUnique(add(randomInt(1,10),randomInt(1,10))); }
-    for(let i=0;i<5;i++){ pushUnique(sub(randomInt(10,20),randomInt(1,10))); }
-    qs.sort(()=>Math.random()-0.5);
-  }
-  else if(currentLevel===6){
-    for(let i=0;i<5;i++){ pushUnique(add(randomInt(10,20),randomInt(1,10))); }
-    for(let i=0;i<5;i++){ pushUnique(sub(randomInt(15,20),randomInt(1,14))); }
-    qs.sort(()=>Math.random()-0.5);
-  }
-  else{ // level7+
-    for(let i=0;i<10;i++){
-      if(Math.random()<0.5){
-        let a=randomInt(1,100), b=randomInt(1,100); if(a+b>100)b=100-a;
-        pushUnique(add(a,b));
-      } else {
-        let a=randomInt(1,100), b=randomInt(0,a);
-        pushUnique(sub(a,b));
-      }
-    }
-  }
-  questions=qs;
+function saveProgress() {
+  const data = { level: currentLevel, progressCount: progressCount, questionIndex: currentQuestionIndex };
+  localStorage.setItem(storageKey(), JSON.stringify(data));
 }
 
-function generateOptions(correct){
-  const opts=[correct];
-  while(opts.length<3){
-    let delta=Math.floor(Math.random()*5)+1;
-    let opt=Math.random()<0.5?correct+delta:correct-delta;
-    if(opt<0) opt=0;
-    if(!opts.includes(opt)) opts.push(opt);
+function loadProgress() {
+  const data = localStorage.getItem(storageKey());
+  if(data){
+    const obj = JSON.parse(data);
+    currentLevel = obj.level || 1;
+    currentQuestionIndex = obj.questionIndex || 0;
+    progressCount = obj.progressCount || 0;
+  } else {
+    currentLevel = 1;
+    currentQuestionIndex = 0;
+    progressCount = 0;
   }
-  return opts.sort(()=>Math.random()-0.5);
+  displayLevel = currentLevel;
+  setLevel(currentLevel);
+  setProgress((progressCount / 10) * 100);
 }
 
+// --- sound helpers ---
+function playAdvance() { if(typeof playAdvanceSound === 'function') playAdvanceSound(); }
+function playWrong() { if(typeof playIncorrectSound === 'function') playIncorrectSound(); }
+function playDemote() { if(typeof playDemoteSound === 'function') playDemoteSound(); }
+
+function setLevel(level){ document.getElementById("levelDisplay").textContent = `Level ${displayLevel}`; }
+function setProgress(percent){ document.getElementById("progressBar").style.width = percent + "%"; }
+
+// --- question generation ---
+function generateQuestions() {
+  let qs = [];
+  for(let i=1;i<=10;i++) qs.push({num1: i, num2: Math.floor(Math.random()*12)+1});
+  qs.sort(()=>Math.random()-0.5);
+  questions = qs.slice(0,10); 
+}
+
+function generateOptions(correct, level){
+  const options = [correct];
+  const count = level >= 6 ? 4 : 3;
+  while(options.length < count){
+    let opt = correct + Math.floor(Math.random()*11) - 5; 
+    if(opt < 0) opt = 0;
+    if(!options.includes(opt)) options.push(opt);
+  }
+  return options.sort(()=>Math.random()-0.5);
+}
+
+// --- showQuestion ---
 function showQuestion(){
-  gameContent.innerHTML="";
-  if(currentQuestionIndex>=questions.length){
-    currentLevel++; setLevel(currentLevel); generateQuestions(); currentQuestionIndex=0; progressCount=0; showRandomSuccess(); return;
-  }
-  const q=questions[currentQuestionIndex];
-  const correctAnswer=q.type==="add"?q.a+q.b:q.a-q.b;
-  questionFailed=false;
+  if(!selectedTable) return;
+  gameContent.innerHTML = "";
 
-  const qEl=document.createElement("div");
-  qEl.textContent=q.type==="add"?`Wat is ${q.a} + ${q.b} ?`:`Wat is ${q.a} - ${q.b} ?`;
+  if(currentQuestionIndex >= questions.length){
+    currentLevel++;
+    displayLevel++;
+    setLevel(currentLevel);
+    generateQuestions();
+    currentQuestionIndex = 0;
+    progressCount = 0;
+    saveProgress();
+    showRandomSuccess();
+    showQuestion();
+    return;
+  }
+
+  const q = questions[currentQuestionIndex];
+  const correctAnswer = q.num1 + q.num2;
+  questionFailed = false;
+
+  const qEl = document.createElement("div");
+  qEl.textContent = `Wat is ${q.num1} + ${q.num2} ?`;
   gameContent.appendChild(qEl);
 
-  if(currentLevel>=8){
-    const input=document.createElement("input"); input.type="text";
-    input.style.fontSize="1.7rem"; input.style.textAlign="center"; input.style.width="80%";
-    input.style.padding="0.6rem"; input.style.borderRadius="12px"; input.style.border="1px solid #ccc";
-    gameContent.appendChild(input); input.focus();
+  if(currentLevel >= 6){ 
+    const display = document.createElement("input");
+    display.type = "text";
+    display.readOnly = isMobile(); 
+    gameContent.appendChild(display);
 
-    input.addEventListener("keydown",(e)=>{
-      if(e.key==="Enter"){
-        const raw=input.value.trim(); if(raw==="") return;
-        const value=parseInt(raw); if(isNaN(value)) return;
-        if(value===correctAnswer){ playAdvance(); progressCount++; setProgress((progressCount/questions.length)*100); currentQuestionIndex++; input.value=""; showQuestion();}
-        else{
-          questionFailed=true; feedback.textContent=`Helaas! ${q.a} ${q.type==="add"?"+":"-"} ${q.b} = ${correctAnswer}`;
-          if(currentLevel>1){ currentLevel--; setLevel(currentLevel); generateQuestions(); currentQuestionIndex=0; progressCount=0; setProgress(0); playDemote(); setTimeout(showQuestion,800);}
-          else{ progressCount=0; currentQuestionIndex=0; setProgress(0); playWrong(); setTimeout(showQuestion,800);}
-        }
-      }
-    });
-  } else {
-    const opts=generateOptions(correctAnswer);
-    opts.forEach(opt=>{
-      const btn=document.createElement("button"); btn.textContent=opt;
-      btn.addEventListener("click",()=>{
-        if(opt===correctAnswer){ btn.classList.add("correct"); playAdvance(); progressCount++; setProgress((progressCount/questions.length)*100); setTimeout(()=>{currentQuestionIndex++; showQuestion();},500);}
-        else{ btn.classList.add("wrong"); questionFailed=true; feedback.textContent=`Helaas! ${q.a} ${q.type==="add"?"+":"-"} ${q.b} = ${correctAnswer}`; setTimeout(()=>{currentQuestionIndex++; showQuestion();},1000);}
+    if(!isMobile()){ setTimeout(() => { display.focus(); }, 0); }
+
+    if(isMobile()){ 
+      const keypad = document.createElement("div");
+      keypad.style.display = "grid";
+      keypad.style.gridTemplateColumns = "repeat(3, 1fr)";
+      keypad.style.gap = "0.5rem";
+      keypad.style.marginTop = "1rem";
+      gameContent.appendChild(keypad);
+
+      const buttons = ["1","2","3","4","5","6","7","8","9","←","0","✓"];
+      buttons.forEach(b=>{
+        const btn = document.createElement("button");
+        btn.textContent = b;
+        keypad.appendChild(btn);
+        btn.addEventListener("click", ()=>{
+          if(b==="←"){ display.value = display.value.slice(0,-1); }
+          else if(b==="✓"){ checkAnswer(parseInt(display.value.trim())); }
+          else { display.value += b; }
+        });
       });
+    } else { 
+      display.addEventListener("keyup", e=>{
+        if(e.key==="Enter"){ checkAnswer(parseInt(display.value.trim())); }
+      });
+    }
+  } else {
+    const opts = generateOptions(correctAnswer, currentLevel);
+    opts.forEach(opt=>{
+      const btn = document.createElement("button");
+      btn.textContent = opt;
+      btn.addEventListener("click", ()=>{ checkAnswer(opt); });
       gameContent.appendChild(btn);
     });
   }
+
+  function checkAnswer(value){
+    if(isNaN(value)) return;
+    feedback.textContent = "";
+    if(value === correctAnswer){
+      playAdvance();
+      progressCount++;
+      setProgress((progressCount/questions.length)*100);
+      saveProgress();
+      currentQuestionIndex++;
+      showQuestion();
+    } else {
+      questionFailed = true;
+      feedback.textContent = `Helaas! ${q.num1} + ${q.num2} = ${correctAnswer}`;
+      handleWrong();
+    }
+  }
+
+  function handleWrong(){
+    if(progressCount>0){
+      progressCount=0; currentQuestionIndex=0; setProgress(0); playWrong(); saveProgress();
+      setTimeout(showQuestion, 800);
+    } else if(currentLevel>1){
+      currentLevel--; displayLevel--; setLevel(currentLevel); generateQuestions(); currentQuestionIndex=0; progressCount=0; setProgress(0); playDemote(); saveProgress();
+      setTimeout(showQuestion, 800);
+    } else {
+      progressCount=0; currentQuestionIndex=0; setProgress(0); playWrong(); saveProgress();
+      setTimeout(showQuestion, 800);
+    }
+  }
 }
 
-createOverlay(); generateQuestions(); showQuestion();
+// --- Start / Continue buttons ---
+const startScreen = document.getElementById('startScreen');
+const startNewBtn = document.getElementById('startNew');
+const continueBtn = document.getElementById('continue');
+
+startNewBtn.addEventListener('click', () => {
+  // Reset progress for new session
+  currentLevel = 1;
+  displayLevel = 1;
+  currentQuestionIndex = 0;
+  progressCount = 0;
+  saveProgress();
+  generateQuestions();
+
+  startScreen.style.display = 'none';
+  document.getElementById('gameWrapper').style.display = 'flex';
+  document.getElementById('levelContainer').style.display = 'flex';
+  
+  showQuestion();
+  createOverlay();
+});
+
+continueBtn.addEventListener('click', () => {
+  loadProgress();
+  generateQuestions();
+
+  startScreen.style.display = 'none';
+  document.getElementById('gameWrapper').style.display = 'flex';
+  document.getElementById('levelContainer').style.display = 'flex';
+
+  showQuestion();
+  createOverlay();
+});
+
+// --- Initialize after page load ---
+window.addEventListener('load', () => {
+  // Nothing happens until user clicks Start or Doorgaan
+  // Sounds will work from first question because of user interaction
+});
 </script>
 </body>
 </html>
