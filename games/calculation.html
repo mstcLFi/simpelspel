@@ -300,20 +300,107 @@ function playDemote() { if(typeof playDemoteSound === 'function') playDemoteSoun
 function setLevel(level){ document.getElementById("levelDisplay").textContent = `Level ${displayLevel}`; }
 function setProgress(percent){ document.getElementById("progressBar").style.width = percent + "%"; }
 
-// --- question generation ---
+// --- generateQuestions ---
 function generateQuestions() {
   let qs = [];
-  for(let i=1;i<=10;i++) qs.push({num1: i, num2: Math.floor(Math.random()*12)+1});
-  qs.sort(()=>Math.random()-0.5);
-  questions = qs.slice(0,10); 
+  if(currentLevel === 1){
+    for(let i=0;i<10;i++){
+      const a = Math.floor(Math.random()*5)+1;
+      const b = Math.floor(Math.random()*5)+1;
+      qs.push({type:'add', num1:a, num2:b});
+    }
+  } else if(currentLevel === 2){
+    for(let i=0;i<10;i++){
+      const a = Math.floor(Math.random()*6)+5;
+      const b = Math.floor(Math.random()*5)+1;
+      qs.push({type:'add', num1:a, num2:b});
+    }
+  } else if(currentLevel === 3){
+    for(let i=0;i<10;i++){
+      const a = Math.floor(Math.random()*6)+5;
+      const b = Math.floor(Math.random()*4)+1;
+      qs.push({type:'sub', num1:a, num2:b});
+    }
+  } else if(currentLevel === 4){
+    let addCount = 0, subCount = 0;
+    while(qs.length < 10){
+      const isAdd = Math.random() < 0.5;
+      if(isAdd && addCount<5){
+        const a = Math.floor(Math.random()*6)+5;
+        const b = Math.floor(Math.random()*5)+1;
+        qs.push({type:'add', num1:a, num2:b});
+        addCount++;
+      } else if(!isAdd && subCount<5){
+        const a = Math.floor(Math.random()*6)+5;
+        const b = Math.floor(Math.random()*4)+1;
+        qs.push({type:'sub', num1:a, num2:b});
+        subCount++;
+      }
+    }
+  } else if(currentLevel === 5){
+    let addCount = 0, subCount = 0;
+    while(qs.length < 10){
+      const isAdd = Math.random() < 0.5;
+      if(isAdd && addCount<5){
+        const a = Math.floor(Math.random()*10)+1;
+        const b = Math.floor(Math.random()*10)+1;
+        qs.push({type:'add', num1:a, num2:b});
+        addCount++;
+      } else if(!isAdd && subCount<5){
+        const a = Math.floor(Math.random()*11)+10;
+        const b = Math.floor(Math.random()*10)+1;
+        qs.push({type:'sub', num1:a, num2:b});
+        subCount++;
+      }
+    }
+  } else if(currentLevel === 6){
+    let addCount = 0, subCount = 0;
+    while(qs.length < 10){
+      const isAdd = Math.random() < 0.5;
+      if(isAdd && addCount<5){
+        const a = Math.floor(Math.random()*11)+10;
+        const b = Math.floor(Math.random()*10)+1;
+        qs.push({type:'add', num1:a, num2:b});
+        addCount++;
+      } else if(!isAdd && subCount<5){
+        const a = Math.floor(Math.random()*6)+15;
+        const b = Math.floor(Math.random()*14)+1;
+        qs.push({type:'sub', num1:a, num2:b});
+        subCount++;
+      }
+    }
+  } else if(currentLevel === 7 || currentLevel >= 8){
+    for(let i=0;i<10;i++){
+      const isAdd = Math.random() < 0.5;
+      if(isAdd){
+        const a = Math.floor(Math.random()*100)+1;
+        const b = Math.floor(Math.random()*(100-a+1));
+        qs.push({type:'add', num1:a, num2:b});
+      } else {
+        const a = Math.floor(Math.random()*100)+1;
+        const b = Math.floor(Math.random()*a);
+        qs.push({type:'sub', num1:a, num2:b});
+      }
+    }
+  }
+  questions = qs;
 }
 
+// --- generateOptions ---
 function generateOptions(correct, level){
   const options = [correct];
-  const count = level >= 6 ? 4 : 3;
-  while(options.length < count){
-    let opt = correct + Math.floor(Math.random()*11) - 5; 
-    if(opt < 0) opt = 0;
+  let minOpt = 0, maxOpt = 10;
+
+  if(level === 1) { minOpt = 1; maxOpt = 10; }
+  else if(level === 2) { minOpt = 5; maxOpt = 15; }
+  else if(level === 3) { minOpt = 1; maxOpt = 10; }
+  else if(level === 4) { minOpt = 1; maxOpt = 15; }
+  else if(level === 5) { minOpt = 1; maxOpt = 20; }
+  else if(level === 6) { minOpt = 1; maxOpt = 30; }
+  else if(level === 7) { minOpt = 0; maxOpt = 99; }
+
+  while(options.length < 3){
+    let opt = Math.floor(Math.random()*(maxOpt-minOpt+1))+minOpt;
     if(!options.includes(opt)) options.push(opt);
   }
   return options.sort(()=>Math.random()-0.5);
@@ -338,14 +425,15 @@ function showQuestion(){
   }
 
   const q = questions[currentQuestionIndex];
-  const correctAnswer = q.num1 + q.num2;
+  const correctAnswer = q.type==='add'? q.num1+q.num2 : q.num1-q.num2;
   questionFailed = false;
 
   const qEl = document.createElement("div");
-  qEl.textContent = `Wat is ${q.num1} + ${q.num2} ?`;
+  qEl.textContent = q.type==='add'? `Wat is ${q.num1} + ${q.num2} ?` : `Wat is ${q.num1} - ${q.num2} ?`;
   gameContent.appendChild(qEl);
 
-  if(currentLevel >= 6){ 
+  if(currentLevel >= 8){ 
+    // Text input for level 8+
     const display = document.createElement("input");
     display.type = "text";
     display.readOnly = isMobile(); 
@@ -378,6 +466,7 @@ function showQuestion(){
       });
     }
   } else {
+    // Multiple choice
     const opts = generateOptions(correctAnswer, currentLevel);
     opts.forEach(opt=>{
       const btn = document.createElement("button");
@@ -399,7 +488,7 @@ function showQuestion(){
       showQuestion();
     } else {
       questionFailed = true;
-      feedback.textContent = `Helaas! ${q.num1} + ${q.num2} = ${correctAnswer}`;
+      feedback.textContent = `Helaas! ${q.num1} ${q.type==='add'?'+':'-'} ${q.num2} = ${correctAnswer}`;
       handleWrong();
     }
   }
@@ -424,7 +513,6 @@ const startNewBtn = document.getElementById('startNew');
 const continueBtn = document.getElementById('continue');
 
 startNewBtn.addEventListener('click', () => {
-  // Reset progress for new session
   currentLevel = 1;
   displayLevel = 1;
   currentQuestionIndex = 0;
@@ -454,9 +542,9 @@ continueBtn.addEventListener('click', () => {
 
 // --- Initialize after page load ---
 window.addEventListener('load', () => {
-  // Nothing happens until user clicks Start or Doorgaan
-  // Sounds will work from first question because of user interaction
+  // Wait for user interaction to start
 });
 </script>
+
 </body>
 </html>
