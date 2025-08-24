@@ -365,6 +365,7 @@ function generateOptions(correct, level){
 }
 
 // --- showQuestion function ---
+// --- showQuestion function ---
 function showQuestion(){
   if(!selectedTable) return;
   gameContent.innerHTML = "";
@@ -389,168 +390,86 @@ function showQuestion(){
   qEl.textContent = `Wat is ${q.factor} x ${q.table} ?`;
   gameContent.appendChild(qEl);
 
-  const display = document.createElement("input");
-  display.type = "text";
-  display.readOnly = currentLevel >= 6 && isMobile(); // only read-only for mobile keypad
-  gameContent.appendChild(display);
+  if(currentLevel >= 6){ // only create input box for typing levels
+    const display = document.createElement("input");
+    display.type = "text";
+    display.readOnly = isMobile(); // only read-only on mobile with keypad
+    gameContent.appendChild(display);
 
-  // --- Auto-focus for PC on level 6+ ---
-  if(currentLevel >= 6 && !isMobile()){
-    setTimeout(() => {
-      display.focus();
-    }, 0);
-  }
+    if(!isMobile()){ // PC auto-focus
+      setTimeout(() => { display.focus(); }, 0);
+    }
 
-  if(currentLevel >= 6 && isMobile()){
-    const keypad = document.createElement("div");
-    keypad.style.display = "grid";
-    keypad.style.gridTemplateColumns = "repeat(3, 1fr)";
-    keypad.style.gap = "0.5rem";
-    keypad.style.marginTop = "1rem";
-    gameContent.appendChild(keypad);
+    if(isMobile()){ 
+      // create mobile keypad
+      const keypad = document.createElement("div");
+      keypad.style.display = "grid";
+      keypad.style.gridTemplateColumns = "repeat(3, 1fr)";
+      keypad.style.gap = "0.5rem";
+      keypad.style.marginTop = "1rem";
+      gameContent.appendChild(keypad);
 
-    const buttons = ["1","2","3","4","5","6","7","8","9","←","0","✓"];
-    buttons.forEach(b=>{
-      const btn = document.createElement("button");
-      btn.textContent = b;
-      keypad.appendChild(btn);
+      const buttons = ["1","2","3","4","5","6","7","8","9","←","0","✓"];
+      buttons.forEach(b=>{
+        const btn = document.createElement("button");
+        btn.textContent = b;
+        keypad.appendChild(btn);
 
-      btn.addEventListener("click", ()=>{
-        if(b==="←"){ display.value = display.value.slice(0,-1); }
-        else if(b==="✓"){
-          const rawValue = display.value.trim();
-          if(rawValue==="") return;
-          const value = parseInt(rawValue);
-          if(isNaN(value)) return;
-          feedback.textContent = "";
-          if(value===correctAnswer){
-            playAdvance();
-            progressCount++;
-            setProgress((progressCount/questions.length)*100);
-            saveProgress();
-            currentQuestionIndex++;
-            showQuestion();
-          } else {
-            questionFailed = true;
-            feedback.textContent = `Helaas! ${q.factor} x ${q.table} = ${correctAnswer}`;
-            if(progressCount>0){
-              progressCount=0;
-              currentQuestionIndex=0;
-              setProgress(0);
-              playWrong();
-              saveProgress();
-              setTimeout(()=>{ showQuestion(); },800);
-            } else if(currentLevel>1){
-              currentLevel--;
-              setLevel(currentLevel);
-              generateQuestions();
-              currentQuestionIndex=0;
-              progressCount=0;
-              setProgress(0);
-              playDemote();
-              saveProgress();
-              setTimeout(()=>{ showQuestion(); },800);
-            } else {
-              progressCount=0;
-              currentQuestionIndex=0;
-              setProgress(0);
-              playWrong();
-              saveProgress();
-              setTimeout(()=>{ showQuestion(); },800);
-            }
-          }
-        } else { display.value += b; }
+        btn.addEventListener("click", ()=>{
+          if(b==="←"){ display.value = display.value.slice(0,-1); }
+          else if(b==="✓"){ checkAnswer(parseInt(display.value.trim())); }
+          else { display.value += b; }
+        });
       });
-    });
-  } else if(currentLevel >= 6){
-    // PC input, allow typing and Enter key
-    display.readOnly = false;
-    display.addEventListener("keyup", e=>{
-      if(e.key==="Enter"){
-        const value = parseInt(display.value.trim());
-        if(isNaN(value)) return;
-        feedback.textContent = "";
-        if(value===correctAnswer){
-          playAdvance();
-          progressCount++;
-          setProgress((progressCount/questions.length)*100);
-          saveProgress();
-          currentQuestionIndex++;
-          showQuestion();
-        } else {
-          questionFailed = true;
-          feedback.textContent = `Helaas! ${q.factor} x ${q.table} = ${correctAnswer}`;
-          if(progressCount>0){
-            progressCount=0;
-            currentQuestionIndex=0;
-            setProgress(0);
-            playWrong();
-            saveProgress();
-            setTimeout(()=>{ showQuestion(); },800);
-          } else if(currentLevel>1){
-            currentLevel--;
-            setLevel(currentLevel);
-            generateQuestions();
-            currentQuestionIndex=0;
-            progressCount=0;
-            setProgress(0);
-            playDemote();
-            saveProgress();
-            setTimeout(()=>{ showQuestion(); },800);
-          } else {
-            progressCount=0;
-            currentQuestionIndex=0;
-            setProgress(0);
-            playWrong();
-            saveProgress();
-            setTimeout(()=>{ showQuestion(); },800);
-          }
-        }
-      }
-    });
+    } else { 
+      display.addEventListener("keyup", e=>{
+        if(e.key==="Enter"){ checkAnswer(parseInt(display.value.trim())); }
+      });
+    }
   } else {
+    // Multiple choice buttons for levels <6
     const opts = generateOptions(correctAnswer, currentLevel);
     opts.forEach(opt=>{
       const btn = document.createElement("button");
       btn.textContent = opt;
       btn.addEventListener("click", ()=>{
-        feedback.textContent = "";
-        if(opt===correctAnswer){
-          btn.classList.add("correct");
-          playAdvance();
-          if(!questionFailed){
-            progressCount++;
-            setProgress((progressCount/questions.length)*100);
-            saveProgress();
-          }
-          setTimeout(()=>{ currentQuestionIndex++; saveProgress(); showQuestion(); },500);
-        } else {
-          questionFailed = true;
-          btn.classList.add("wrong");
-          feedback.textContent = `Helaas! ${q.factor} x ${q.table} = ${correctAnswer}`;
-          if(progressCount>0){
-            progressCount=0;
-            currentQuestionIndex=0;
-            setProgress(0);
-            playWrong();
-            saveProgress();
-            setTimeout(()=>{ showQuestion(); },800);
-          } else if(currentLevel>1){
-            currentLevel--;
-            setLevel(currentLevel);
-            generateQuestions();
-            currentQuestionIndex=0;
-            progressCount=0;
-            playDemote();
-            saveProgress();
-            setTimeout(()=>{ showQuestion(); },800);
-          } else { playWrong(); }
-        }
+        checkAnswer(opt);
       });
       gameContent.appendChild(btn);
     });
   }
+
+  function checkAnswer(value){
+    if(isNaN(value)) return;
+    feedback.textContent = "";
+    if(value === correctAnswer){
+      playAdvance();
+      progressCount++;
+      setProgress((progressCount/questions.length)*100);
+      saveProgress();
+      currentQuestionIndex++;
+      showQuestion();
+    } else {
+      questionFailed = true;
+      feedback.textContent = `Helaas! ${q.factor} x ${q.table} = ${correctAnswer}`;
+      handleWrong();
+    }
+  }
+
+  function handleWrong(){
+    if(progressCount>0){
+      progressCount=0; currentQuestionIndex=0; setProgress(0); playWrong(); saveProgress();
+      setTimeout(showQuestion, 800);
+    } else if(currentLevel>1){
+      currentLevel--; setLevel(currentLevel); generateQuestions(); currentQuestionIndex=0; progressCount=0; setProgress(0); playDemote(); saveProgress();
+      setTimeout(showQuestion, 800);
+    } else {
+      progressCount=0; currentQuestionIndex=0; setProgress(0); playWrong(); saveProgress();
+      setTimeout(showQuestion, 800);
+    }
+  }
 }
+
 
 
 tableSelect.addEventListener("change", ()=>{
