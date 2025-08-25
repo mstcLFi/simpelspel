@@ -13,7 +13,7 @@
       position: relative;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      justify-content: flex-start;
       align-items: center;
       background: white;
       border-radius: 20px;
@@ -42,7 +42,16 @@
 
     #container > * { position: relative; z-index: 1; }
 
-    #levelIndicator { position: absolute; bottom: 50px; font-size: 2.5em; font-weight: bold; z-index: 2; }
+    #levelIndicator {
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 2.5em;
+      font-weight: bold;
+      z-index: 2;
+    }
+
     h1 { margin: 10px 0; font-size: 2em; }
 
     #digitalClock {
@@ -51,7 +60,33 @@
       margin: 20px 0;
     }
 
-    #choices { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+    /* Middle section with feedback + choices */
+    #contentArea {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      padding-bottom: 120px; /* reserve bottom space */
+      box-sizing: border-box;
+    }
+
+    #feedback {
+      font-size: 1.2em;
+      height: 1.5em;
+      margin-bottom: 10px;
+      color: #444;
+    }
+
+    #choices {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      flex-grow: 1;
+      justify-content: flex-start;
+    }
 
     .answer-btn {
       padding: 12px;
@@ -66,9 +101,24 @@
     .answer-btn.correct { border-color: green; box-shadow: 0 0 10px green; }
     .answer-btn.wrong { border-color: red; box-shadow: 0 0 10px red; }
 
-    #feedback { font-size: 1.2em; height: 1.5em; margin-top: 10px; color: #444; }
-    #progressBar { width: 100%; height: 15px; background: #ddd; border-radius: 10px; overflow: hidden; }
-    #progress { height: 100%; width: 0%; background: #4caf50; transition: width 0.3s; }
+    #progressBar {
+      position: absolute;
+      bottom: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      height: 15px;
+      background: #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    #progress {
+      height: 100%;
+      width: 0%;
+      background: #4caf50;
+      transition: width 0.3s;
+    }
 
     @media (max-height: 500px), (max-width: 400px) {
       #container { padding: 10px; }
@@ -118,8 +168,12 @@
   <a id="backArrow" href="../index.html">↩︎</a>
   <h1>Klokkijken</h1>
   <div id="digitalClock">00:00</div>
-  <div id="choices"></div>
-  <p id="feedback"></p>
+
+  <div id="contentArea">
+    <p id="feedback"></p>
+    <div id="choices"></div>
+  </div>
+
   <div id="progressBar"><div id="progress"></div></div>
 </div>
 
@@ -146,7 +200,7 @@ let hasCompletedLevel6 = false;
 const successSound = document.getElementById("successSound");
 const wrong1Sound = document.getElementById("wrong1Sound");
 const wrong2Sound = document.getElementById("wrong2Sound");
-const winnerSound = document.getElementById("wrong2Sound");
+const winnerSound = document.getElementById("winnerSound");
 
 function updateLevelColor(level) {
   const redIntensity = Math.min(255, 50 + (level - 1) * 40);
@@ -166,10 +220,7 @@ function generateTime(level) {
 
   // 50% chance to switch to PM (12–23)
   if(Math.random() < 0.5) h += 12;
-
-  // keep hours within 0-23
   h = h % 24;
-
   return { h, m };
 }
 
@@ -190,10 +241,10 @@ function formatTimeDutch(h, m) {
   ];
 
   let suffix = "";
-  if (h >= 6 && h < 12) suffix = " ’s ochtends";       // 05:00 - 11:59
-  else if (h >= 12 && h < 18) suffix = " ’s middags";  // 12:00 - 17:59
-  else if (h >= 18 && h < 24) suffix = " ’s avonds";   // 18:00 - 21:59
-  else suffix = " ’s nachts";                          // 22:00 - 04:59
+  if (h >= 6 && h < 12) suffix = " ’s ochtends";
+  else if (h >= 12 && h < 18) suffix = " ’s middags";
+  else if (h >= 18 && h < 24) suffix = " ’s avonds";
+  else suffix = " ’s nachts";
 
   switch (m) {
     case 0: return `${hourNames[currentHour]} uur${suffix}`;
