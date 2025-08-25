@@ -58,8 +58,7 @@
 
     #levelIndicator {
       position: absolute;
-      top: 20px;
-      left: 15%;
+      bottom: 50px;
       font-size: 2.5em;
       font-weight: bold;
       z-index: 2;
@@ -186,7 +185,7 @@
   <img src="../images/dinosaur images/triceratopsje.png" alt="Gefeliciteerd!" />
 </div>
   <div id="container">
-    <div id="levelIndicator">1</div>
+    <div id="levelIndicator">Level 1</div>
     <a id="backArrow" href="../index.html">↩︎</a>
     <h1>Klokkijken</h1>
     <canvas id="clockCanvas" width="300" height="300"></canvas>
@@ -196,9 +195,10 @@
   </div>
 
   <!-- Sound Effects -->
-  <audio id="successSound" src="sounds/success.mp3"></audio>
-  <audio id="wrong1Sound" src="sounds/wrong2.mp3"></audio>
-  <audio id="wrong2Sound" src="sounds/wrong.mp3"></audio>
+  <audio id="successSound" src="../sounds/advance.mp3"></audio>
+  <audio id="wrong1Sound" src="../sounds/incorrect.mp3"></audio>
+  <audio id="wrong2Sound" src="../sounds/demote.mp3"></audio>
+  <audio id="winnerSound" src="../sounds/winner.mp3"></audio>
 
   <script>
     const levelIndicator = document.getElementById("levelIndicator");
@@ -217,6 +217,7 @@
     const successSound = document.getElementById("successSound");
     const wrong1Sound = document.getElementById("wrong1Sound");
     const wrong2Sound = document.getElementById("wrong2Sound");
+    const winnerSound = document.getElementById("wrong2Sound");
 
     function updateLevelColor(level) {
       const indicator = document.getElementById("levelIndicator");
@@ -408,7 +409,7 @@
             feedback.textContent = `Helaas, het juiste antwoord was: ${correctLabel}`;
             setTimeout(nextQuestion, 3000);
           }
-          levelIndicator.textContent = level;
+          levelIndicator.textContent = `Level ${level}`;
           updateLevelColor(level);
           updateProgress();
         };
@@ -423,13 +424,14 @@
     function showCelebration() {
       celebrationOverlay.style.display = "flex";
       hasCompletedLevel6 = true;
+      winnerSound.play();
     }
 
     function hideCelebration() {
       celebrationOverlay.style.display = "none";
     }
 
-    levelIndicator.textContent = level;
+    levelIndicator.textContent = `Level ${level}`;
     updateLevelColor(level);
     nextQuestion();
   </script>
