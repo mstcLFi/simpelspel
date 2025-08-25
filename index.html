@@ -6,13 +6,26 @@
 <title>Leer snel op Simpelspel.nl!</title>
 
 <!-- Google Analytics -->
-https://www.googletagmanager.com/gtag/js?id=G-TXJZYR7KH5
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TXJZYR7KH5"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-TXJZYR7KH5');
+</script>
+
+<!-- Google Consent Mode v2 (default restricted until consent) -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+
+  // Default: no consent until user accepts
+  gtag('consent', 'default', {
+    'ad_storage': 'denied',
+    'analytics_storage': 'denied',
+    'ad_user_data': 'denied',
+    'ad_personalization': 'denied'
+  });
 </script>
 
 <!-- SEO metatags -->
@@ -67,6 +80,7 @@ h1 { margin: 0; font-size: 1.5rem; }
   width: 100%;
   max-width: 1200px;
   margin: auto;
+  align-items: stretch;
 }
 
 .card {
@@ -79,6 +93,7 @@ h1 { margin: 0; font-size: 1.5rem; }
   color: inherit;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .card:hover { transform: translateY(-5px); }
@@ -109,7 +124,8 @@ h1 { margin: 0; font-size: 1.5rem; }
 @media (max-width: 600px) {
   header h1 { font-size: 1.2rem; }
   .card img { height: 150px; }
-  .grid { gap: 1rem; padding: 0.5rem; }
+  .grid { gap: 1rem; padding: 0.5rem; align-items: start; }
+  .card { height: auto; }
 }
 
 /* Scroll-to-top button */
@@ -142,7 +158,7 @@ h1 { margin: 0; font-size: 1.5rem; }
   background-color: #00B140;
   color: white;
   text-align: center;
-  padding: 10rem 1rem;
+  padding: 1rem;
   font-size: 1rem;
   z-index: 2000;
   display: flex;
@@ -251,53 +267,44 @@ document.addEventListener("DOMContentLoaded", () => {
   const scrollBtn = document.getElementById("scroll-top");
   const buttonSound = new Audio('sounds/button.mp3');
 
-  // Cookie banner
+  // Cookie banner + Consent Mode v2
   const banner = document.getElementById("cookie-banner");
   const acceptBtn = document.getElementById("cookie-accept");
+
   if(localStorage.getItem("cookiesAccepted") === "true") {
     banner.style.display = "none";
+    // If already accepted, grant consent immediately
+    gtag('consent', 'update', {
+      'ad_storage': 'granted',
+      'analytics_storage': 'granted',
+      'ad_user_data': 'granted',
+      'ad_personalization': 'granted'
+    });
   }
+
   acceptBtn.addEventListener("click", () => {
     localStorage.setItem("cookiesAccepted", "true");
     banner.style.display = "none";
+    // Update Google Consent Mode
+    gtag('consent', 'update', {
+      'ad_storage': 'granted',
+      'analytics_storage': 'granted',
+      'ad_user_data': 'granted',
+      'ad_personalization': 'granted'
+    });
   });
 
-  // Insert ads every 5th card
-  function insertAds() {
+  // Insert ONE ad after the 3rd card
+  function insertAd() {
     const cards = Array.from(grid.children);
-    const numAds = Math.floor(cards.length / 5); // or any formula you like
-    let positions = [];
-
-    // Generate all allowed positions: skip index 0, skip last card
-    for (let i = 1; i < cards.length; i++) {
-      positions.push(i);
-    }
-
-    const usedPositions = [];
-
-    for (let i = 0; i < numAds; i++) {
-      // Filter positions to ensure at least 1 game between ads
-      const allowed = positions.filter(pos => 
-        !usedPositions.includes(pos - 1) &&
-        !usedPositions.includes(pos) &&
-        !usedPositions.includes(pos + 1)
-      );
-
-      if (allowed.length === 0) break; // no more valid spots
-
-      // Pick a random allowed position
-      const randomIndex = Math.floor(Math.random() * allowed.length);
-      const pos = allowed[randomIndex];
-
+    const pos = 3; // after 3rd game
+    if (cards.length > pos) {
       const adClone = adTemplate.content.cloneNode(true);
-      const insertedNode = grid.insertBefore(adClone, grid.children[pos]);
+      grid.insertBefore(adClone, grid.children[pos]);
       (adsbygoogle = window.adsbygoogle || []).push({});
-
-      usedPositions.push(pos);
     }
   }
-
-  insertAds();
+  insertAd();
 
   // Scroll-to-top button visibility
   function checkScrollBtn() {
