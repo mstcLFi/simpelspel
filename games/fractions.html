@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Breuken</title>
+
+<link rel="apple-touch-icon" sizes="180x180" href="../icons/apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="../icons/icon-32.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png" />
+<link rel="icon" type="image/png" sizes="512x512" href="../icons/icon-512.png" />
+
+<link rel="stylesheet" href="../template/template.css">
+
+<style>
+html, body { height: 100%; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+body { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 2rem; background: #f0f4f8; }
+#gameWrapper, #levelContainer { display: none; }
+#gameWrapper { display: flex; flex-direction: column; align-items: center; width: 90%; max-width: 400px; flex: 1 0 auto; }
+#gameContent { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 1rem; flex: 1 0 auto; justify-content: flex-start; margin-top: -1.5rem; }
+#gameContent .question { font-size: 1.4rem; text-align: center; margin-bottom: 0.5rem; }
+.answer { padding: 0.7rem; border: 1px solid #ccc; border-radius: 12px; background: #f9f9f9; cursor: pointer; transition: background 0.2s; text-align: center; font-size: 1.2rem; width: 100%; }
+.answer:hover { background: #eef; }
+.correct { background: #4caf50 !important; color: white; }
+.wrong { background: #f44336 !important; color: white; }
+#feedback { font-size: 1.2rem; font-weight: bold; min-height: 1.5em; text-align: center; margin-bottom: 1.25rem; color: red; }
+#levelContainer { width: 90%; max-width: 400px; margin-top: 1.2rem; display: flex; flex-direction: column; align-items: center; }
+#levelDisplay { font-size: 1.4rem; margin-bottom: 0.4rem; }
+#progressContainer { width: 80%; max-width: 320px; margin: 0 auto; height: 16px; border: 1px solid #ccc; border-radius: 8px; background-color: #eee; }
+#progressBar { height: 100%; width: 0%; background-color: #68a749; border-radius: 8px; transition: width 0.3s ease; }
+#startScreen { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.startButton { width: 180px; padding: 0.8rem 0; font-size: 1.5rem; border-radius: 12px; border: 1px solid #ccc; background-color: white; cursor: pointer; transition: background-color 0.2s ease; }
+.startButton:hover { background-color: #e0f0d9; }
+#successOverlay { position: fixed; top:0; left:0; width: 100%; height:100%; display: none; justify-content: center; align-items: center; background: rgba(0,0,0,0.8); z-index: 9999; cursor: pointer; }
+#successOverlay img { max-width: 90%; max-height: 90%; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+#backArrow { position: absolute; top: 15px; left: 20px; font-size: 2rem; text-decoration: none; color: #4caf50; opacity: 0.7; z-index: 10; }
+#backArrow:hover { opacity: 1; }
+
+/* Shake Animation */
+@keyframes shake {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-1px); }
+  40% { transform: translateX(2px); }
+  60% { transform: translateX(-1px); }
+  80% { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+.shake {
+  animation: shake 0.4s infinite;
+}
+</style>
+</head>
+
+<body>
+<div id="container">
+  <a id="backArrow" href="../index.html">↩︎</a>
+  <input type="color" id="bgColorPicker" />
+  <h1 id="gameTitle">Breuken</h1>
+
+  <div id="startScreen">
+    <button id="startNew" class="startButton">Start</button>
+    <button id="continue" class="startButton">Doorgaan</button>
+  </div>
+
+  <div id="gameWrapper">
+    <div id="feedback"></div>
+    <div id="gameContent"></div>
+  </div>
+
+  <div id="levelContainer">
+    <div id="levelDisplay">Level 1</div>
+    <div id="progressContainer"><div id="progressBar"></div></div>
+  </div>
+</div>
+
+<div id="successOverlay"><img id="successImg"></div>
+
+<!-- Audio -->
+<audio id="successSound" src="../sounds/advance.mp3"></audio>
+<audio id="wrongSound" src="../sounds/incorrect.mp3"></audio>
+<audio id="wrongStartSound" src="../sounds/demote.mp3"></audio>
+<audio id="timeWarningSound" src="../sounds/TimeIsUp_3sec.mp3"></audio>
+
+<script>
+// --- Elements ---
+const gameContent = document.getElementById("gameContent");
+const feedback = document.getElementById("feedback");
+const levelDisplay = document.getElementById("levelDisplay");
+const progressBar = document.getElementById("progressBar");
+const bgColorPicker = document.getElementById("bgColorPicker");
+const successOverlay = document.getElementById("successOverlay");
+const successImg = document.getElementById("successImg");
+const successSound = document.getElementById("successSound");
+const wrongSound = document.getElementById("wrongSound");
+const wrongStartSound = document.getElementById("wrongStartSound");
+const timeWarningSound = document.getElementById("timeWarningSound");
+
+// --- Game Variables ---
+let level = 1;
+let progress = 0;
+let wrongStreak = 0;
+let timer = null;
+let warningTimer = null;
+
+const successImages = [
+  '../images/horse images/horse-1804425_1280.jpg',
+  '../images/horse images/horse-2595445_1280.jpg',
+  '../images/horse images/horse-3390256_1280.jpg',
+  '../images/horse images/horse-561221_1280.jpg',
+  '../images/horse images/horse-6646593_1280.jpg',
+  '../images/horse images/horse-7158632_1280.jpg',
+  '../images/horse images/horses-2904536_1280.jpg',
+  '../images/horse images/iceland-2420768_1280.jpg',
+  '../images/horse images/italy-7290977_1280.jpg',
+  '../images/horse images/white-horse-3419146_1280.jpg'
+];
+
+// --- Local Storage ---
+function saveProgress(){ localStorage.setItem('breuken_progress', JSON.stringify({level, progress})); }
+function loadProgress(){ const data=JSON.parse(localStorage.getItem('breuken_progress')||'{}'); level=data.level||5; progress=data.progress||0; setLevelDisplay(); setProgressBar(); }
+
+// --- Helper ---
+function gcd(a,b){ return b===0?a:gcd(b,a%b);}
+function simplifyFraction(num,den){ const g=gcd(num,den); num/=g; den/=g; const whole=Math.floor(num/den); const rem=num%den; if(rem===0) return `${whole}`; return whole>=1?`${whole} ${rem}/${den}`:`${rem}/${den}`; }
+
+// --- Question Generation ---
+function generateQuestion(){
+  let num, den;
+  if(level===1){ den=Math.floor(Math.random()*9)+2; num=Math.floor(Math.random()*(den-1))+1;}
+  else if(level===2){ num=Math.floor(Math.random()*10)+3; den=num-1;}
+  else if(level===3){ den=Math.floor(Math.random()*11)+3; do{num=Math.floor(Math.random()*11)+den+1;} while(num%den===0);}
+  else{ den=Math.floor(Math.random()*9)+2; num=Math.floor(Math.random()*100)+1; while(num%den===0) num++; }
+
+  const correct = simplifyFraction(num,den);
+  const answers = new Set([correct]);
+  const offsets=[-3,-2,-1,1,2,3];
+  for(let offset of offsets){ let n=num+offset;if(n<=0)n=1; const ans=simplifyFraction(n,den); if(!answers.has(ans)) answers.add(ans); if(answers.size>=4) break; }
+  while(answers.size<4){ let n=num+(Math.floor(Math.random()*7)-3); if(n<=0)n=1; const ans=simplifyFraction(n,den); if(!answers.has(ans)) answers.add(ans); }
+  return { num, den, correct, options: Array.from(answers).sort(()=>Math.random()-0.5) };
+}
+
+// --- Display ---
+function setLevelDisplay(){ levelDisplay.textContent=`Level ${level}`;}
+function setProgressBar(){ progressBar.style.width=(progress*10)+'%';}
+
+// --- Timer Duration ---
+function getTimerDuration(){
+  if(level===5) return 10000;
+  if(level===6) return 8000;
+  if(level===7) return 6000;
+  if(level===8) return 4000;
+  if(level>=9) return 3000;
+  return 0;
+}
+
+// --- New Round ---
+function newRound(prevQuestion=null, prevAnswer=null){
+  clearTimeout(timer); clearTimeout(warningTimer);
+  document.getElementById('gameWrapper').classList.remove('shake');
+
+  const q = generateQuestion();
+  gameContent.innerHTML='';
+  feedback.textContent = prevQuestion&&prevAnswer?`Fout! ${prevQuestion} = ${prevAnswer}`:'';
+
+  const qDiv = document.createElement('div'); qDiv.className='question'; qDiv.textContent=`${q.num} ÷ ${q.den} = ?`; gameContent.appendChild(qDiv);
+
+  q.options.forEach(opt=>{
+    const btn=document.createElement('div'); btn.className='answer'; btn.textContent=opt;
+    btn.onclick=()=>{ handleAnswer(opt,q); };
+    gameContent.appendChild(btn);
+  });
+
+  setProgressBar();
+
+  // --- Auto-advance timer with warning ---
+  const duration = getTimerDuration();
+  if(duration > 3000){
+    warningTimer = setTimeout(()=>{
+      timeWarningSound.currentTime=0;
+      timeWarningSound.play();
+      document.getElementById('gameWrapper').classList.add('shake');
+    }, duration-3000);
+  }
+
+  if(duration>0){
+    timer = setTimeout(()=>{
+      document.getElementById('gameWrapper').classList.remove('shake');
+      newRound();
+    }, duration);
+  }
+}
+
+// --- Answer Handler ---
+function handleAnswer(opt,q){
+  clearTimeout(timer); clearTimeout(warningTimer);
+  document.getElementById('gameWrapper').classList.remove('shake');
+
+  if(opt===q.correct){
+    const btns = document.querySelectorAll('.answer'); btns.forEach(b=>{ if(b.textContent===opt) b.classList.add('correct'); });
+    successSound.currentTime=0; successSound.play();
+    progress++;
+    if(progress >= 10){ level++; progress=0; showSuccessOverlay(); }
+    setLevelDisplay(); setProgressBar(); saveProgress();
+    setTimeout(()=>newRound(),500);
+  } else {
+    const btns = document.querySelectorAll('.answer'); btns.forEach(b=>{ if(b.textContent===opt) b.classList.add('wrong'); });
+    if(progress===0){ wrongStartSound.currentTime=0; wrongStartSound.play(); }
+    else { wrongSound.currentTime=0; wrongSound.play(); }
+    wrongStreak++; progress=0;
+    if(wrongStreak>=2){ level--; if(level<1) level=1; wrongStreak=0; }
+    setLevelDisplay(); setProgressBar(); saveProgress();
+    setTimeout(()=>newRound(`${q.num} ÷ ${q.den}`, q.correct),500);
+  }
+}
+
+// --- Success Overlay ---
+function showSuccessOverlay(){
+  const img = successImages[Math.floor(Math.random()*successImages.length)];
+  successImg.src = img; successOverlay.style.display='flex';
+  successOverlay.onclick=()=>{ successOverlay.style.display='none'; successOverlay.onclick=null; newRound(); };
+}
+
+// --- Start Screen ---
+const startScreen=document.getElementById('startScreen');
+document.getElementById('startNew').onclick=()=>{
+  level=5; progress=0; saveProgress();
+  startScreen.style.display='none';
+  document.getElementById('gameWrapper').style.display='flex';
+  document.getElementById('levelContainer').style.display='flex';
+  newRound();
+};
+document.getElementById('continue').onclick=()=>{
+  loadProgress();
+  startScreen.style.display='none';
+  document.getElementById('gameWrapper').style.display='flex';
+  document.getElementById('levelContainer').style.display='flex';
+  newRound();
+};
+
+// --- Background color picker ---
+window.addEventListener('DOMContentLoaded',()=>{
+  const saved=localStorage.getItem('bgColor'); if(saved) document.body.style.backgroundColor=saved;
+  bgColorPicker.value=saved||'#f0f4f8';
+});
+bgColorPicker.addEventListener('input',e=>{
+  document.body.style.backgroundColor=e.target.value;
+  localStorage.setItem('bgColor', e.target.value);
+});
+</script>
+</body>
+</html>
