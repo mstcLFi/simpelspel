@@ -267,25 +267,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const scrollBtn = document.getElementById("scroll-top");
   const buttonSound = new Audio('sounds/button.mp3');
 
-  // Cookie banner + Consent Mode v2
+  // Cookie banner + Consent Mode
   const banner = document.getElementById("cookie-banner");
   const acceptBtn = document.getElementById("cookie-accept");
-
-  if(localStorage.getItem("cookiesAccepted") === "true") {
-    banner.style.display = "none";
-    // If already accepted, grant consent immediately
-    gtag('consent', 'update', {
-      'ad_storage': 'granted',
-      'analytics_storage': 'granted',
-      'ad_user_data': 'granted',
-      'ad_personalization': 'granted'
-    });
-  }
-
+  if(localStorage.getItem("cookiesAccepted") === "true") banner.style.display = "none";
   acceptBtn.addEventListener("click", () => {
     localStorage.setItem("cookiesAccepted", "true");
     banner.style.display = "none";
-    // Update Google Consent Mode
     gtag('consent', 'update', {
       'ad_storage': 'granted',
       'analytics_storage': 'granted',
@@ -294,19 +282,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Insert ONE ad after the 3rd card
+  // Insert ad after 3rd card
   function insertAd() {
     const cards = Array.from(grid.children);
-    const pos = 3; // after 3rd game
+    const pos = 3;
     if (cards.length > pos) {
       const adClone = adTemplate.content.cloneNode(true);
       grid.insertBefore(adClone, grid.children[pos]);
       (adsbygoogle = window.adsbygoogle || []).push({});
     }
   }
-  insertAd();
 
-  // Scroll-to-top button visibility
+  // Scroll-to-top button
   function checkScrollBtn() {
     scrollBtn.style.display = (window.scrollY > 50) ? "block" : "none";
   }
@@ -317,21 +304,85 @@ document.addEventListener("DOMContentLoaded", () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
-  // Game card lift effect & sound
+  // Game card lift effect & sound + track plays
   const gameCards = document.querySelectorAll('#card-grid a.card');
+  const playCount = JSON.parse(localStorage.getItem('playCount') || '{}');
+  let lastPlayed = JSON.parse(localStorage.getItem('lastPlayed') || '[]');
+
   gameCards.forEach(card => {
+    const gameName = card.querySelector('.card-title').textContent.trim();
     card.addEventListener('click', (e) => {
       e.preventDefault();
       buttonSound.currentTime = 0;
       buttonSound.play();
       card.style.transform = 'translateY(-10px)';
       card.style.transition = 'transform 0.3s ease';
+
+      // Update localStorage
+      playCount[gameName] = (playCount[gameName] || 0) + 1;
+      localStorage.setItem('playCount', JSON.stringify(playCount));
+
+      // Update lastPlayed array (remove if already exists to prevent duplicates)
+      lastPlayed = lastPlayed.filter(g => g !== gameName);
+      lastPlayed.unshift(gameName); // most recent first
+      localStorage.setItem('lastPlayed', JSON.stringify(lastPlayed));
+
       const link = card.getAttribute('href');
       setTimeout(() => { window.location.href = link; }, 500);
     });
   });
+
+  // Reorder cards based on playCount and lastPlayed
+  function reorderCards() {
+    const cards = Array.from(grid.querySelectorAll('a.card'));
+    const adCard = grid.querySelector('.adsbygoogle')?.closest('.card');
+
+    let gameCards = cards.filter(c => c !== adCard);
+
+    // Determine first card (most played)
+    let firstCard = null;
+    if(Object.keys(playCount).length) {
+      const mostPlayed = Object.entries(playCount).sort((a,b) => b[1]-a[1])[0][0];
+      firstCard = gameCards.find(c => c.querySelector('.card-title').textContent.trim() === mostPlayed);
+    }
+
+    // Determine second card (last played, not same as first)
+    let secondCard = null;
+    if(lastPlayed.length) {
+      for(let g of lastPlayed) {
+        if(!firstCard || g !== firstCard.querySelector('.card-title').textContent.trim()) {
+          secondCard = gameCards.find(c => c.querySelector('.card-title').textContent.trim() === g);
+          break;
+        }
+      }
+    }
+
+    // Remove first and second from original array
+    gameCards = gameCards.filter(c => c !== firstCard && c !== secondCard);
+
+    // Build new order
+    const newOrder = [];
+    if(firstCard) newOrder.push(firstCard);
+    if(secondCard) newOrder.push(secondCard);
+
+    // Insert ad in 4th position
+    while(gameCards.length > 0) {
+      if(newOrder.length === 3 && adCard) newOrder.push(adCard);
+      newOrder.push(gameCards.shift());
+    }
+    if(newOrder.length < 4 && adCard) newOrder.splice(3,0,adCard);
+
+    // Clear grid and append
+    grid.innerHTML = '';
+    newOrder.forEach(c => grid.appendChild(c));
+    if(adCard) (adsbygoogle = window.adsbygoogle || []).push({});
+  }
+
+  reorderCards();
+  insertAd();
 });
 </script>
+
 
 </body>
 </html>
