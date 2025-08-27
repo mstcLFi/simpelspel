@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Splitsen</title>
+
+<link rel="apple-touch-icon" sizes="180x180" href="../icons/apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="../icons/icon-32.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png" />
+<link rel="icon" type="image/png" sizes="512x512" href="../icons/icon-512.png" />
+
+<link rel="stylesheet" href="../template/template.css">
+
+<style>
+html, body { height: 100%; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+body { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 2rem; background: #f0f4f8; }
+#gameWrapper, #levelContainer { display: none; }
+#gameWrapper { display: flex; flex-direction: column; align-items: center; width: 90%; max-width: 400px; flex: 1 0 auto; }
+#gameContent { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 1rem; flex: 1 0 auto; justify-content: flex-start; margin-top: -1.5rem; }
+#gameContent .question { font-size: 1.4rem; text-align: center; margin-bottom: 0.5rem; }
+.answer { padding: 0.7rem; border: 1px solid #ccc; border-radius: 12px; background: #f9f9f9; cursor: pointer; transition: background 0.2s; text-align: center; font-size: 1.2rem; width: 100%; }
+.answer:hover { background: #eef; }
+.correct { background: #4caf50 !important; color: white; }
+.wrong { background: #f44336 !important; color: white; }
+#feedback { font-size: 1.2rem; font-weight: bold; min-height: 1.5em; text-align: center; margin-bottom: 1.25rem; color: red; }
+#levelContainer { width: 90%; max-width: 400px; margin-top: 1.2rem; display: flex; flex-direction: column; align-items: center; }
+#levelDisplay { font-size: 1.4rem; margin-bottom: 0.4rem; }
+#progressContainer { width: 80%; max-width: 320px; margin: 0 auto; height: 16px; border: 1px solid #ccc; border-radius: 8px; background-color: #eee; }
+#progressBar { height: 100%; width: 0%; background-color: #68a749; border-radius: 8px; transition: width 0.3s ease; }
+#startScreen { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.startButton { width: 180px; padding: 0.8rem 0; font-size: 1.5rem; border-radius: 12px; border: 1px solid #ccc; background-color: white; cursor: pointer; transition: background-color 0.2s ease; }
+.startButton:hover { background-color: #e0f0d9; }
+#successOverlay { position: fixed; top:0; left:0; width: 100%; height:100%; display: none; justify-content: center; align-items: center; background: rgba(0,0,0,0.8); z-index: 9999; cursor: pointer; }
+#successOverlay img { max-width: 90%; max-height: 90%; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+#backArrow { position: absolute; top: 15px; left: 20px; font-size: 2rem; text-decoration: none; color: #4caf50; opacity: 0.7; z-index: 10; }
+#backArrow:hover { opacity: 1; }
+
+/* Shake Animation */
+@keyframes shake {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-1px); }
+  40% { transform: translateX(2px); }
+  60% { transform: translateX(-1px); }
+  80% { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+.shake { animation: shake 0.4s infinite; }
+
+.answersGrid { display: grid; width: 100%; gap: 0.8rem; grid-template-columns: 1fr; }
+</style>
+</head>
+<body>
+
+<div id="container">
+  <a id="backArrow" href="../index.html">↩︎</a>
+  <input type="color" id="bgColorPicker" />
+  <h1 id="gameTitle">Splitsen</h1>
+
+  <div id="startScreen">
+    <button id="startNew" class="startButton">Start</button>
+    <button id="continue" class="startButton">Doorgaan</button>
+  </div>
+
+  <div id="gameWrapper">
+    <div id="feedback"></div>
+    <div id="gameContent"></div>
+  </div>
+
+  <div id="levelContainer">
+    <div id="levelDisplay">Level 1</div>
+    <div id="progressContainer"><div id="progressBar"></div></div>
+  </div>
+</div>
+
+<div id="successOverlay"><img id="successImg" alt="success image"></div>
+
+<!-- Audio -->
+<audio id="successSound" src="../sounds/advance.mp3"></audio>
+<audio id="wrongSound" src="../sounds/incorrect.mp3"></audio>
+<audio id="wrongStartSound" src="../sounds/demote.mp3"></audio>
+<audio id="timeWarningSound" src="../sounds/TimeIsUp_3sec.mp3"></audio>
+
+<script>
+// ---------- Elements ----------
+const gameContent = document.getElementById("gameContent");
+const feedback = document.getElementById("feedback");
+const levelDisplay = document.getElementById("levelDisplay");
+const progressBar = document.getElementById("progressBar");
+const bgColorPicker = document.getElementById("bgColorPicker");
+const successOverlay = document.getElementById("successOverlay");
+const successImg = document.getElementById("successImg");
+const successSound = document.getElementById("successSound");
+const wrongSound = document.getElementById("wrongSound");
+const wrongStartSound = document.getElementById("wrongStartSound");
+const timeWarningSound = document.getElementById("timeWarningSound");
+
+// ---------- Game State ----------
+let level = 1;
+let progress = 0;
+let wrongStreak = 0;
+let timer = null;
+let warningTimer = null;
+
+// ---------- Images ----------
+const successImages = [
+  "../images/russianblue images/cat-1846101_1280.jpg",
+  "../images/russianblue images/cat-2480769_1280.jpg",
+  "../images/russianblue images/cat-2480773_1280.jpg",
+  "../images/russianblue images/cat-2480777_1280.jpg",
+  "../images/russianblue images/cat-3853399_1280.jpg",
+  "../images/russianblue images/cat-4540443_1280.jpg",
+  "../images/russianblue images/cat-6985007_1280.jpg",
+  "../images/russianblue images/cat-8176158_1280.jpg",
+  "../images/russianblue images/pet-5728249_1280.jpg",
+  "../images/russianblue images/russian-blue-7618223_1280.jpg"
+];
+
+// ---------- Local Storage ----------
+const STORAGE_KEY = 'splitsen_progress';
+function saveProgress(){ localStorage.setItem(STORAGE_KEY, JSON.stringify({level, progress})); }
+function loadProgress(){ const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); level = data.level || 1; progress = data.progress || 0; setLevelDisplay(); setProgressBar(); }
+
+// ---------- Helpers ----------
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function shuffle(arr){ return arr.sort(() => Math.random() - 0.5); }
+function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+function safePlay(el){ try { el.currentTime = 0; const p = el.play(); if (p && typeof p.catch === 'function') p.catch(()=>{}); } catch(_){} }
+
+// ---------- Question Generators ----------
+function makeNumberOptions(correct, maxVal){
+  const candidates = [correct-1, correct+1, correct+2, correct-2, correct+3, correct-3].map(v=>clamp(v,0,maxVal)).filter(v=>v!==correct);
+  const seen = new Set(); const out = [];
+  for(const v of candidates){ if(!seen.has(v)){ seen.add(v); out.push(v); } if(out.length===3) break; }
+  let tries=0;
+  while(out.length<3 && tries<50){ let v=clamp(correct+randInt(-5,5),0,maxVal); if(v!==correct && !seen.has(v)){ seen.add(v); out.push(v); } tries++; }
+  return shuffle([correct,...out]).map(String);
+}
+
+function makePairOptions(n1, hi){
+  const a=randInt(0,n1); const b=n1-a; const correct=`${a} en ${b}`; const pairs=[correct];
+  const candidates=[[clamp(a+1,0,hi),b],[a,clamp(b+2,0,hi)],[clamp(a+2,0,hi),clamp(b+2,0,hi)],[clamp(a-1,0,hi),b],[a,clamp(b-2,0,hi)]];
+  const labels=new Set([correct]);
+  for(const [x,y] of candidates){ if(x+y!==n1){ const lab=`${x} en ${y}`; if(!labels.has(lab)){labels.add(lab);pairs.push(lab);} if(pairs.length===4) break; } }
+  let safety=0;
+  while(pairs.length<4 && safety<200){ let x=randInt(0,hi), y=randInt(0,hi); if(x+y===n1){y=(y+1)<=hi?y+1:Math.max(0,y-1);} const lab=`${x} en ${y}`; if(!labels.has(lab)){labels.add(lab);pairs.push(lab);} safety++; }
+  return {correct, options: shuffle(pairs)};
+}
+
+function generateSplitQuestion(){
+  let n1,n2,text,correct,options;
+
+  if(level===1){
+    n1=randInt(1,10);
+    n2=randInt(0,n1);
+    text=`Het getal ${n1} kun je splitsen in ${n2} en ?`;
+    correct=String(n1-n2);
+    options=makeNumberOptions(n1-n2,n1);
+  }
+  else if(level===2){
+    n1=randInt(8,12);
+    n2=randInt(0,Math.min(12,n1));
+    text=`Het getal ${n1} kun je splitsen in ${n2} en ?`;
+    correct=String(n1-n2);
+    options=makeNumberOptions(n1-n2,n1);
+  }
+  else if(level>=3 && level<=5){
+    const ranges={3:[1,10],4:[1,15],5:[1,25]};
+    const [lo,hi]=ranges[level];
+    n1=randInt(lo,hi);
+    text=`Het getal ${n1} kun je splitsen in ? en ?`;
+    const pair=makePairOptions(n1,hi);
+    correct=pair.correct;
+    options=pair.options;
+  }
+  else if(level>=6){ // KEEP LEVEL 5 DIFFICULTY, just add timer/shake
+    n1=randInt(1,25);
+    text=`Het getal ${n1} kun je splitsen in ? en ?`;
+    const pair=makePairOptions(n1,25);
+    correct=pair.correct;
+    options=pair.options;
+  }
+
+  return {text,correct,options};
+}
+
+// ---------- Display ----------
+function setLevelDisplay(){ levelDisplay.textContent=`Level ${level}`; }
+function setProgressBar(){ progressBar.style.width=(progress*10)+'%'; }
+
+// ---------- Timer Duration ----------
+function getTimerDuration(){
+  if(level===6) return 10000;
+  if(level===7) return 8000;
+  if(level===8) return 6000;
+  if(level===9) return 4000;
+  if(level>=10) return 3000;
+  return 0;
+}
+
+// ---------- Render ----------
+function renderQuestion(q){
+  gameContent.innerHTML='';
+  const qDiv=document.createElement('div'); qDiv.className='question'; qDiv.textContent=q.text; gameContent.appendChild(qDiv);
+  q.options.forEach(opt=>{
+    const btn=document.createElement('div'); btn.className='answer'; btn.textContent=opt;
+    btn.onclick=()=>handleAnswer(opt,q);
+    gameContent.appendChild(btn);
+  });
+}
+
+// ---------- Success Overlay ----------
+function showSuccessOverlay(){
+  const img=successImages[Math.floor(Math.random()*successImages.length)];
+  successImg.src=img;
+  successOverlay.style.display='flex';
+  successOverlay.onclick=()=>{ successOverlay.style.display='none'; successOverlay.onclick=null; newRound(); };
+}
+
+// ---------- Answer Handler ----------
+function handleAnswer(opt,q){
+  clearTimeout(timer); clearTimeout(warningTimer);
+  document.getElementById('gameWrapper').classList.remove('shake');
+
+  const btns=[...document.querySelectorAll('.answer')];
+  const clickedBtn=btns.find(b=>b.textContent===opt);
+  if(opt===q.correct){
+    if(clickedBtn) clickedBtn.classList.add('correct');
+    safePlay(successSound);
+    wrongStreak=0;
+    progress++;
+    if(progress>=10){ level++; progress=0; showSuccessOverlay(); }
+    setLevelDisplay(); setProgressBar(); saveProgress();
+    setTimeout(()=>newRound(),500);
+  } else {
+    if(clickedBtn) clickedBtn.classList.add('wrong');
+    if(progress===0) safePlay(wrongStartSound); else safePlay(wrongSound);
+    wrongStreak++; progress=0;
+    if(wrongStreak>=2){ level--; if(level<1) level=1; wrongStreak=0; }
+    setLevelDisplay(); setProgressBar(); saveProgress();
+    setTimeout(()=>newRound(`${q.text}`,q.correct),500);
+  }
+}
+
+// ---------- New Round ----------
+function newRound(prevQuestion=null, prevAnswer=null){
+  clearTimeout(timer); clearTimeout(warningTimer);
+  document.getElementById('gameWrapper').classList.remove('shake');
+
+  const q=generateSplitQuestion();
+  feedback.textContent=prevQuestion&&prevAnswer?`Fout! ${prevQuestion} = ${prevAnswer}`:'';
+  renderQuestion(q);
+  setLevelDisplay(); setProgressBar();
+
+  const duration=getTimerDuration();
+  if(duration>0){
+    const warningTime=Math.max(duration-3000,0);
+    warningTimer=setTimeout(()=>{
+      timeWarningSound.currentTime=0; timeWarningSound.play();
+      document.getElementById('gameWrapper').classList.add('shake');
+    }, warningTime);
+
+    timer=setTimeout(()=>{
+      document.getElementById('gameWrapper').classList.remove('shake');
+      newRound();
+    },duration);
+  }
+}
+
+// ---------- Start Buttons ----------
+document.getElementById('startNew').onclick=()=>{
+  level=1; progress=0; saveProgress();
+  document.getElementById('startScreen').style.display='none';
+  document.getElementById('gameWrapper').style.display='flex';
+  document.getElementById('levelContainer').style.display='flex';
+  newRound();
+};
+document.getElementById('continue').onclick=()=>{
+  loadProgress();
+  document.getElementById('startScreen').style.display='none';
+  document.getElementById('gameWrapper').style.display='flex';
+  document.getElementById('levelContainer').style.display='flex';
+  newRound();
+};
+
+// ---------- Background Color Picker ----------
+window.addEventListener('DOMContentLoaded',()=>{
+  const saved=localStorage.getItem('bgColor'); if(saved) document.body.style.backgroundColor=saved; bgColorPicker.value=saved||'#f0f4f8';
+});
+bgColorPicker.addEventListener('input',e=>{
+  document.body.style.backgroundColor=e.target.value; localStorage.setItem('bgColor',e.target.value);
+});
+</script>
+</body>
+</html>
