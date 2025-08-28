@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spreekwoorden</title>
+<style>
+body { font-family: Arial, sans-serif; background: #f0f0f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+h1 { color: #333; }
+.quiz-container { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 500px; width: 100%; text-align: center; margin-top: 20px; }
+.question { font-size: 1.2em; margin-bottom: 20px; }
+.answers { display: flex; flex-direction: column; align-items: center; }
+.answers button { display: block; margin: 10px auto; padding: 10px 20px; font-size: 1em; border-radius: 8px; border: none; cursor: pointer; background-color: #4CAF50; color: white; transition: 0.2s; min-height: 60px; width: 80%; text-align: center; white-space: normal; }
+.answers button:hover { background-color: #45a049; }
+.result { font-weight: bold; margin-top: 20px; font-size: 1.1em; }
+.progress-bar-container { background: #ddd; border-radius: 10px; width: 100%; height: 20px; margin-top: 20px; overflow: hidden; }
+.progress-bar { height: 100%; width: 0; background-color: #4CAF50; transition: width 0.3s; }
+.start-menu { text-align: center; }
+.start-menu button { margin: 10px; padding: 10px 20px; font-size: 1em; border-radius: 8px; border: none; cursor: pointer; background-color: #2196F3; color: white; }
+.start-menu button:hover { background-color: #0b7dda; }
+</style>
+</head>
+<body>
+
+<h1>Spreekwoorden</h1>
+
+<div class="start-menu" id="startMenu">
+    <button onclick="startQuiz(true)">Nieuw spel starten</button>
+    <button onclick="startQuiz(false)">Doorgaan</button>
+</div>
+
+<div class="quiz-container" id="quizContainer" style="display:none;">
+    <div class="question">Laadt vraag...</div>
+    <div class="answers">
+        <button></button>
+        <button></button>
+        <button></button>
+    </div>
+    <div class="result"></div>
+    <div class="progress-bar-container">
+        <div class="progress-bar"></div>
+    </div>
+</div>
+
+<audio id="soundAdvance" src="../sounds/advance.mp3"></audio>
+<audio id="soundWinner" src="../sounds/winner.mp3"></audio>
+<audio id="soundIncorrect" src="../sounds/incorrect.mp3"></audio>
+
+<script>
+const spreekwoorden = [
+    {spreekwoord: "De kat uit de boom kijken", correct: "Eerst rustig afwachten", bijna: "De kat echt uit een boom halen", grappig: "Wachten tot de kat een theekransje houdt"},
+    {spreekwoord: "Hoge bomen vangen veel wind", correct: "Mensen met veel macht krijgen veel problemen", bijna: "Hoge bomen worden altijd omgezaagd", grappig: "Bomen hebben altijd een paraplu nodig"},
+    {spreekwoord: "Een appeltje voor de dorst", correct: "Iets bewaren voor later", bijna: "Een appeltje eten als je dorst hebt", grappig: "Appels drinken bij de koffie"},
+    {spreekwoord: "Wie een kuil graaft voor een ander valt er zelf in", correct: "Wie iets slechts doet, krijgt vaak zelf problemen", bijna: "Een kuil maken is altijd gevaarlijk", grappig: "In kuilen vallen is een nieuwe sport"},
+    {spreekwoord: "Twee vliegen in één klap", correct: "Twee dingen tegelijk oplossen", bijna: "Twee vliegen vangen en laten vliegen", grappig: "Vliegen hebben altijd een feestje"},
+    {spreekwoord: "De pot verwijt de ketel dat hij zwart ziet", correct: "Iemand bekritiseren terwijl je zelf hetzelfde doet", bijna: "De pot is echt zwart", grappig: "Keukenspullen doen aan pesten"},
+    {spreekwoord: "Iets onder de knie hebben", correct: "Iets goed kunnen", bijna: "Iets met je knie doen", grappig: "Je knie als toverstaf gebruiken"},
+    {spreekwoord: "Wie het kleine niet eert, is het grote niet weerd", correct: "Kleine dingen waarderen is belangrijk", bijna: "Kleine dingen zijn altijd stom", grappig: "Kleine dingen zijn voor kabouters"},
+    {spreekwoord: "Beter één vogel in de hand dan tien in de lucht", correct: "Liever iets zeker hebben dan te veel willen", bijna: "Vogelpap kan ook lekker zijn", grappig: "Vogels spelen verstoppertje met je hand"},
+    {spreekwoord: "Als twee honden vechten om een been, loopt de derde ermee heen", correct: "Anderen profiteren als twee mensen ruzie hebben", bijna: "Honden spelen altijd vals", grappig: "De derde hond is een dief in sneakers"},
+    {spreekwoord: "Wie zijn billen brandt, moet op de blaren zitten", correct: "Wie iets verkeerd doet, moet de gevolgen dragen", bijna: "Brandweer komt altijd te laat", grappig: "Blaren hebben geheime krachten"},
+    {spreekwoord: "Door de mand vallen", correct: "Betrapt worden op een leugen", bijna: "Door een echte mand vallen", grappig: "Mand als geheime agent gebruiken"},
+    {spreekwoord: "Elk huisje heeft zijn kruisje", correct: "Iedereen heeft problemen", bijna: "Huisjes hebben kruizen op het dak", grappig: "Kruisjes zijn voor mini-spookjes"},
+    {spreekwoord: "De boog kan niet altijd gespannen zijn", correct: "Je moet af en toe rust nemen", bijna: "Boogschieten is zwaar", grappig: "Bogen doen ook aan yoga"},
+    {spreekwoord: "Na regen komt zonneschijn", correct: "Na moeilijke tijden wordt het weer beter", bijna: "Regen maakt altijd blij", grappig: "Zon en regen dansen samen"},
+    {spreekwoord: "Als het kalf verdronken is, dempt men de put", correct: "Pas actie ondernemen als het te laat is", bijna: "Kalveren zijn slechte zwemmers", grappig: "Putten hebben stiekeme feestjes"},
+    {spreekwoord: "De kruik gaat zolang te water tot hij barst", correct: "Iets steeds proberen kan fout gaan", bijna: "Kruiken houden van zwemmen", grappig: "Kruiken hebben geheimen"},
+    {spreekwoord: "Voor niets gaat de zon op", correct: "Niets komt vanzelf", bijna: "De zon werkt soms niet", grappig: "De zon houdt van vakantie"},
+    {spreekwoord: "Wie niet waagt, die niet wint", correct: "Je moet durven proberen", bijna: "Niet durven is altijd veilig", grappig: "Winnen met een knuffel"},
+    {spreekwoord: "Met de deur in huis vallen", correct: "Meteen zeggen wat je bedoelt", bijna: "De deur is altijd open", grappig: "Huizen hebben geheime deuren"}
+];
+
+let originalOrder = [];
+let repeatQueue = [];
+let currentIndex = 0;
+let lastButtonClicked = null;
+let consecutiveSameButtonWrong = 0;
+let correctAnswered = new Set();
+
+const quizContainer = document.getElementById("quizContainer");
+const startMenu = document.getElementById("startMenu");
+const questionEl = document.querySelector(".question");
+const buttons = document.querySelectorAll(".answers button");
+const resultEl = document.querySelector(".result");
+const progressBar = document.querySelector(".progress-bar");
+const soundAdvance = document.getElementById("soundAdvance");
+const soundWinner = document.getElementById("soundWinner");
+const soundIncorrect = document.getElementById("soundIncorrect");
+
+function shuffleArray(array){for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]];}return array;}
+
+function startQuiz(isNew){
+    startMenu.style.display="none";
+    quizContainer.style.display="block";
+
+    if(isNew || !localStorage.getItem("quizState")){
+        originalOrder = shuffleArray([...Array(spreekwoorden.length).keys()]);
+        currentIndex = 0;
+        repeatQueue = [];
+        correctAnswered.clear();
+        lastButtonClicked = null;
+        consecutiveSameButtonWrong = 0;
+        saveState();
+    } else { loadState(); }
+    loadQuestion();
+}
+
+function saveState(){
+    localStorage.setItem("quizState", JSON.stringify({
+        originalOrder, currentIndex, repeatQueue,
+        correctAnswered: Array.from(correctAnswered)
+    }));
+}
+
+function loadState(){
+    const state = JSON.parse(localStorage.getItem("quizState"));
+    originalOrder = state.originalOrder;
+    currentIndex = state.currentIndex;
+    repeatQueue = state.repeatQueue;
+    correctAnswered = new Set(state.correctAnswered);
+}
+
+function loadQuestion(){
+    let vraagIndex;
+    if(currentIndex < originalOrder.length){
+        vraagIndex = originalOrder[currentIndex];
+    } else if(repeatQueue.length>0){
+        vraagIndex = repeatQueue.shift();
+    } else {
+        // einde
+        questionEl.textContent = "Einde van de quiz!";
+        resultEl.textContent = "";
+        document.querySelector(".answers").style.display="none";
+        progressBar.style.width="100%";
+        localStorage.removeItem("quizState");
+        soundWinner.play();
+        for(let i=0;i<3;i++){setTimeout(()=>{navigator.vibrate(500)}, i*700);}
+        return;
+    }
+
+    const q = spreekwoorden[vraagIndex];
+    questionEl.textContent = q.spreekwoord;
+    const answers = shuffleArray([q.correct,q.bijna,q.grappig]);
+    buttons.forEach((btn,i)=>{
+        btn.textContent = answers[i];
+        btn.disabled = false;
+        btn.onclick = ()=>{handleAnswer(answers[i], btn, vraagIndex);}
+    });
+
+    updateProgress();
+}
+
+function handleAnswer(answer, btn, vraagIndex){
+    const correctAnswer = spreekwoorden[vraagIndex].correct;
+
+    if(answer === correctAnswer){
+        if(!correctAnswered.has(vraagIndex)){
+            correctAnswered.add(vraagIndex);
+            soundAdvance.play();
+            navigator.vibrate(100);
+        }
+        resultEl.textContent = "";
+    } else {
+        if(!correctAnswered.has(vraagIndex) && !repeatQueue.includes(vraagIndex)){
+            repeatQueue.push(vraagIndex);
+        }
+        soundIncorrect.play();
+        navigator.vibrate([100,100]);
+
+        if(lastButtonClicked===btn){
+            consecutiveSameButtonWrong++;
+        } else {
+            lastButtonClicked = btn;
+            consecutiveSameButtonWrong=1;
+        }
+        if(consecutiveSameButtonWrong>=3){
+            localStorage.removeItem("quizState");
+            correctAnswered.clear();
+            repeatQueue=[];
+            originalOrder=shuffleArray([...Array(spreekwoorden.length).keys()]);
+            currentIndex=0;
+            lastButtonClicked=null;
+            consecutiveSameButtonWrong=0;
+            loadQuestion();
+            return;
+        }
+    }
+
+    if(currentIndex<originalOrder.length) currentIndex++;
+
+    saveState();
+    loadQuestion();
+}
+
+function updateProgress(){
+    const totaal = spreekwoorden.length;
+    const gedaan = correctAnswered.size;
+    const percent = (gedaan / totaal) * 100;
+    progressBar.style.width = percent + "%";
+}
+</script>
+</body>
+</html>
