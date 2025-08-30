@@ -1,10 +1,10 @@
 {
-  "name": "Leerzame spelletjes voor Kinderen",
+  "name": "Leerzame spelletjes voor kinderen",
   "short_name": "Simpelspel.nl",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#f9fafb",
+  "theme_color": "#00B140",
   "icons": [
     {
       "src": "icons/apple-touch-icon.png",
