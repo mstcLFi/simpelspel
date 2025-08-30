@@ -178,7 +178,6 @@ function handleAnswer(answer,q,vraagIndex,btnIndex){
     if(!correctAnswered.has(vraagIndex)){
       correctAnswered.add(vraagIndex);
       safePlay(soundAdvance);
-      navigator.vibrate(100);
       showSuccessOverlay(q.spreekwoord);
     }
     feedback.textContent="";
@@ -191,7 +190,6 @@ function handleAnswer(answer,q,vraagIndex,btnIndex){
 
     if(wrongStreak>=3){
       // reset quiz
-      navigator.vibrate([100,100,100]);
       localStorage.removeItem("quizState");
       startQuiz(true);
       return;
@@ -199,7 +197,6 @@ function handleAnswer(answer,q,vraagIndex,btnIndex){
 
     if(!repeatQueue.includes(vraagIndex) && !correctAnswered.has(vraagIndex)) repeatQueue.push(vraagIndex);
     safePlay(soundIncorrect);
-    navigator.vibrate([100,100]);
     feedback.textContent="Fout! Probeer opnieuw.";
     currentIndex++;
     saveState();
