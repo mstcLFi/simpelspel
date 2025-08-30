@@ -15,9 +15,10 @@
 <style>
 html, body { height: 100%; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
 body { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 2rem; background: #f0f4f8; }
-#gameWrapper { display: none; flex-direction: column; align-items: center; width: 90%; max-width: 400px; }
-#gameContent { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 1rem; margin-top: -1.5rem; }
-#gameContent .question { font-size: 1.4rem; text-align: center; margin-bottom: 0.5rem; }
+#gameWrapper, #levelContainer { display: none; }
+#gameWrapper { display: flex; flex-direction: column; align-items: center; width: 90%; max-width: 400px; flex: 1 0 auto; }
+#gameContent { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 1rem; flex: 1 0 auto; justify-content: flex-start; margin-top: -1.5rem; }
+#gameContent .question { font-size: 1.4rem; text-align: center; margin-top: 30px; margin-bottom: 1rem; }
 .answer { padding: 0.7rem; border: 1px solid #ccc; border-radius: 12px; background: #f9f9f9; cursor: pointer; transition: background 0.2s; text-align: center; font-size: 1.2rem; width: 100%; user-select: none; }
 .answer:hover { background: #eef; }
 .correct { background: #4caf50 !important; color: white; }
@@ -27,13 +28,13 @@ body { display: flex; flex-direction: column; align-items: center; justify-conte
 #progressContainer { width: 80%; max-width: 320px; margin: 0 auto; height: 16px; border: 1px solid #ccc; border-radius: 8px; background-color: #eee; }
 #progressBar { height: 100%; width: 0%; background-color: #68a749; border-radius: 8px; transition: width 0.3s ease; }
 #startScreen { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
-.startButton { width: 180px; padding: 0.8rem 0; font-size: 1.5rem; border-radius: 12px; border: 1px solid #ccc; background-color: white; cursor: pointer; transition: background-color 0.2s ease; }
+.startButton { width: 180px; padding: 0.8rem 0; font-size: 1.5rem; border-radius: 12px; border: 1px solid #ccc; background-color: white; cursor: pointer; transition: background-color 0.2s ease; margin-top: 30px;}
 .startButton:hover { background-color: #e0f0d9; }
 #successOverlay { position: fixed; top:0; left:0; width: 100%; height:100%; display: none; justify-content: center; align-items: center; background: rgba(0,0,0,0.8); z-index: 9999; cursor: pointer; }
 #successOverlay img { max-width: 90%; max-height: 90%; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
 #backArrow { position: absolute; top: 15px; left: 20px; font-size: 2rem; text-decoration: none; color: #4caf50; opacity: 0.7; z-index: 10; }
 #backArrow:hover { opacity: 1; }
-#bgColorPicker { position: absolute; top: 15px; right: 15px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid #ccc; padding: 0; cursor: pointer; }
+.answersGrid { display: grid; width: 100%; gap: 2.0rem; grid-template-columns: 1fr; }
 </style>
 </head>
 <body>
@@ -41,7 +42,10 @@ body { display: flex; flex-direction: column; align-items: center; justify-conte
 <div id="container">
   <a id="backArrow" href="../index.html">↩︎</a>
   <input type="color" id="bgColorPicker" />
-  <h1 id="gameTitle">Spreekwoorden</h1>
+  <h1 id="gameTitle">
+    <span>Spreekwoorden<br></span>
+    <span>en gezegdes</span>
+  </h1>
 
   <div id="startScreen">
     <button id="startNew" class="startButton">Start</button>
@@ -52,12 +56,7 @@ body { display: flex; flex-direction: column; align-items: center; justify-conte
     <div id="feedback"></div>
     <div id="gameContent">
       <div class="question"></div>
-      <div class="answersGrid">
-        <button class="answer"></button>
-        <button class="answer"></button>
-        <button class="answer"></button>
-      </div>
-      <div class="result"></div>
+      <div class="answersGrid"></div>
     </div>
   </div>
 
@@ -68,13 +67,14 @@ body { display: flex; flex-direction: column; align-items: center; justify-conte
 
 <div id="successOverlay"><img id="successImg" alt="success image"></div>
 
+<!-- Audio -->
 <audio id="soundAdvance" src="../sounds/advance.mp3"></audio>
 <audio id="soundWinner" src="../sounds/winner.mp3"></audio>
 <audio id="soundIncorrect" src="../sounds/incorrect.mp3"></audio>
 
 <script>
-// Spreekwoorden data
-const spreekwoorden=[
+// ---------------------- Spreekwoorden data ----------------------
+const spreekwoorden = [
   {spreekwoord:"De kat uit de boom kijken", correct:"Eerst rustig afwachten", bijna:"De kat echt uit een boom halen", grappig:"Wachten tot de kat een theekransje houdt"},
   {spreekwoord:"Hoge bomen vangen veel wind", correct:"Mensen met veel macht krijgen veel problemen", bijna:"Hoge bomen worden altijd omgezaagd", grappig:"Bomen hebben altijd een paraplu nodig"},
   {spreekwoord:"Een appeltje voor de dorst", correct:"Iets bewaren voor later", bijna:"Een appeltje eten als je dorst hebt", grappig:"Appels drinken bij de koffie"},
@@ -97,32 +97,44 @@ const spreekwoorden=[
   {spreekwoord:"Met de deur in huis vallen", correct:"Meteen zeggen wat je bedoelt", bijna:"De deur is altijd open", grappig:"Huizen hebben geheime deuren"}
 ];
 
-// State
-let originalOrder=[], repeatQueue=[], currentIndex=0, lastButtonClicked=null, consecutiveSameButtonWrong=0, correctAnswered=new Set();
+// ---------------------- State ----------------------
+let originalOrder=[], repeatQueue=[], currentIndex=0, correctAnswered=new Set();
+let lastWrongBtnIndex=null, wrongStreak=0; // voor 3x fout op zelfde knop
 
-const quizContainer=document.getElementById("gameWrapper");
 const startScreen=document.getElementById("startScreen");
+const quizContainer=document.getElementById("gameWrapper");
 const questionEl=document.querySelector(".question");
-const buttons=document.querySelectorAll(".answersGrid .answer");
-const resultEl=document.querySelector(".result");
-const progressBarEl=document.getElementById("progressBar");
+const answersGrid=document.querySelector(".answersGrid");
+const feedback=document.getElementById("feedback");
+const progressBar=document.getElementById("progressBar");
+const successOverlay=document.getElementById("successOverlay");
+const successImg=document.getElementById("successImg");
+
+// sounds
 const soundAdvance=document.getElementById("soundAdvance");
 const soundWinner=document.getElementById("soundWinner");
 const soundIncorrect=document.getElementById("soundIncorrect");
 
+// ---------------------- Utils ----------------------
 function shuffleArray(array){for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]];}return array;}
+function safePlay(el){try{el.currentTime=0; const p=el.play(); if(p&&typeof p.catch==="function") p.catch(()=>{});}catch(_){}}
 
-document.getElementById('startNew').onclick=()=>startQuiz(true);
-document.getElementById('continue').onclick=()=>startQuiz(false);
+// ---------------------- Game Flow ----------------------
+document.getElementById("startNew").onclick=()=>startQuiz(true);
+document.getElementById("continue").onclick=()=>startQuiz(false);
 
 function startQuiz(isNew){
   startScreen.style.display="none";
   quizContainer.style.display="flex";
+  document.getElementById("levelContainer").style.display="flex";
+
   if(isNew || !localStorage.getItem("quizState")){
     originalOrder=shuffleArray([...Array(spreekwoorden.length).keys()]);
-    currentIndex=0; repeatQueue=[]; correctAnswered.clear(); lastButtonClicked=null; consecutiveSameButtonWrong=0;
+    currentIndex=0; repeatQueue=[]; correctAnswered.clear();
+    lastWrongBtnIndex=null; wrongStreak=0;
     saveState();
   } else { loadState(); }
+
   loadQuestion();
 }
 
@@ -133,31 +145,99 @@ function loadQuestion(){
   let vraagIndex;
   if(currentIndex<originalOrder.length){ vraagIndex=originalOrder[currentIndex]; }
   else if(repeatQueue.length>0){ vraagIndex=repeatQueue.shift(); }
-  else{ questionEl.textContent="Einde van de quiz!"; resultEl.textContent=""; quizContainer.querySelector(".answersGrid").style.display="none"; progressBarEl.style.width="100%"; localStorage.removeItem("quizState"); soundWinner.play(); return; }
+  else { // klaar!
+    questionEl.textContent="Je bent een spreekwoordenexpert!";
+    answersGrid.innerHTML="";
+    feedback.textContent="";
+    progressBar.style.width="100%";
+    localStorage.removeItem("quizState");
+    safePlay(soundWinner);
+    return;
+  }
 
   const q=spreekwoorden[vraagIndex];
   questionEl.textContent=q.spreekwoord;
+  feedback.textContent="";
+
   const answers=shuffleArray([q.correct,q.bijna,q.grappig]);
-  buttons.forEach((btn,i)=>{ btn.textContent=answers[i]; btn.disabled=false; btn.classList.remove('correct','wrong'); btn.onclick=()=>handleAnswer(answers[i],btn,vraagIndex); });
+  answersGrid.innerHTML="";
+  answers.forEach((ans,idx)=>{
+    const btn=document.createElement("div");
+    btn.className="answer";
+    btn.textContent=ans;
+    btn.onclick=()=>handleAnswer(ans,q,vraagIndex,idx);
+    answersGrid.appendChild(btn);
+  });
+
   updateProgress();
 }
 
-function handleAnswer(answer,btn,vraagIndex){
-  const correctAnswer=spreekwoorden[vraagIndex].correct;
+function handleAnswer(answer,q,vraagIndex,btnIndex){
+  const correctAnswer=q.correct;
   if(answer===correctAnswer){
-    if(!correctAnswered.has(vraagIndex)){ correctAnswered.add(vraagIndex); soundAdvance.play(); navigator.vibrate(100); }
-    resultEl.textContent="";
-  } else{
-    if(!correctAnswered.has(vraagIndex) && !repeatQueue.includes(vraagIndex)){ repeatQueue.push(vraagIndex); }
-    soundIncorrect.play(); navigator.vibrate([100,100]);
-    if(lastButtonClicked===btn){ consecutiveSameButtonWrong++; } else { lastButtonClicked=btn; consecutiveSameButtonWrong=1; }
-    if(consecutiveSameButtonWrong>=3){ localStorage.removeItem("quizState"); correctAnswered.clear(); repeatQueue=[]; originalOrder=shuffleArray([...Array(spreekwoorden.length).keys()]); currentIndex=0; lastButtonClicked=null; consecutiveSameButtonWrong=0; loadQuestion(); return; }
+    if(!correctAnswered.has(vraagIndex)){
+      correctAnswered.add(vraagIndex);
+      safePlay(soundAdvance);
+      navigator.vibrate(100);
+      showSuccessOverlay(q.spreekwoord);
+    }
+    feedback.textContent="";
+    currentIndex++;
+    lastWrongBtnIndex=null; wrongStreak=0; // reset streak bij goed antwoord
+  } else {
+    // check of 3x zelfde knop fout is
+    if(btnIndex===lastWrongBtnIndex){ wrongStreak++; } else { wrongStreak=1; }
+    lastWrongBtnIndex=btnIndex;
+
+    if(wrongStreak>=3){
+      // reset quiz
+      navigator.vibrate([100,100,100]);
+      localStorage.removeItem("quizState");
+      startQuiz(true);
+      return;
+    }
+
+    if(!repeatQueue.includes(vraagIndex) && !correctAnswered.has(vraagIndex)) repeatQueue.push(vraagIndex);
+    safePlay(soundIncorrect);
+    navigator.vibrate([100,100]);
+    feedback.textContent="Fout! Probeer opnieuw.";
+    currentIndex++;
+    saveState();
+    loadQuestion();
+    return;
   }
-  if(currentIndex<originalOrder.length) currentIndex++;
-  saveState(); loadQuestion();
+  saveState();
 }
 
-function updateProgress(){ const totaal=spreekwoorden.length; const gedaan=correctAnswered.size; progressBarEl.style.width=(gedaan/totaal*100)+"%"; }
+function updateProgress(){
+  const totaal=spreekwoorden.length;
+  const gedaan=correctAnswered.size;
+  progressBar.style.width=(gedaan/totaal*100)+"%";
+}
+
+// ---------------------- Success Overlay ----------------------
+function showSuccessOverlay(spreekwoord){
+  const imgPath="../images/spreekwoorden/"+spreekwoord+".jpeg";
+  successImg.src=imgPath;
+  successOverlay.style.display="flex";
+  successOverlay.onclick=()=>{
+    successOverlay.style.display="none";
+    successOverlay.onclick=null;
+    loadQuestion();
+  };
+}
+
+// ---------------------- Background Color Picker ----------------------
+const bgColorPicker=document.getElementById("bgColorPicker");
+window.addEventListener("DOMContentLoaded",()=>{
+  const saved=localStorage.getItem("bgColor");
+  if(saved) document.body.style.backgroundColor=saved;
+  bgColorPicker.value=saved||"#f0f4f8";
+});
+bgColorPicker.addEventListener("input",e=>{
+  document.body.style.backgroundColor=e.target.value;
+  localStorage.setItem("bgColor",e.target.value);
+});
 </script>
 </body>
 </html>
